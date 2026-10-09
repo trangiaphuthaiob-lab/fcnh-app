@@ -267,6 +267,14 @@ textarea{resize:vertical;min-height:84px}
 .post-compose{background:var(--card);border-radius:18px;padding:16px;margin-bottom:14px;box-shadow:var(--shadow)}
 .post-compose textarea{width:100%;border:1px solid var(--line);border-radius:14px;padding:10px 14px;font-size:14px;resize:vertical;min-height:60px;background:var(--soft)}
 .post-compose .prow{display:flex;gap:8px;align-items:center;margin-top:10px;flex-wrap:wrap}
+.post-compose .img-prev{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.post-compose .img-prev .thumb{position:relative;width:80px;height:80px;border-radius:10px;overflow:hidden;flex:none}
+.post-compose .img-prev .thumb img,.post-compose .img-prev .thumb video{width:100%;height:100%;object-fit:cover}
+.post-compose .img-prev .thumb .rm{position:absolute;top:2px;right:2px;width:22px;height:22px;border-radius:50%;background:rgba(0,0,0,.6);color:#fff;font-size:14px;display:flex;align-items:center;justify-content:center;cursor:pointer;border:none;padding:0}
+.post-compose .img-prev .thumb .vid-badge{position:absolute;bottom:4px;left:4px;background:rgba(0,0,0,.6);color:#fff;font-size:10px;padding:1px 5px;border-radius:4px}
+.post-compose .attach-row{display:flex;gap:8px;align-items:center;margin-top:10px}
+.post-compose .attach-btn{display:flex;align-items:center;gap:5px;padding:8px 14px;border-radius:12px;font-size:13px;font-weight:600;color:var(--accent);background:rgba(46,125,50,.08);cursor:pointer;border:1px solid rgba(46,125,50,.15)}
+.post-compose .attach-btn:active{background:rgba(46,125,50,.16)}
 @media(prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 
@@ -291,6 +299,17 @@ const vnd=n=>(Math.round(n)).toLocaleString("vi-VN")+"đ";
 const parseMoney=s=>{s=String(s||"").toLowerCase().replace(/[.,\s]/g,"");let m=1;if(/tr$/.test(s)){m=1e6;s=s.slice(0,-2)}else if(/k$/.test(s)){m=1e3;s=s.slice(0,-1)}const n=Number(s);return isFinite(n)&&n>0?Math.round(n*m):0};
 const initials=n=>String(n||"?").trim().split(/\s+/).slice(-1)[0].slice(0,2).toUpperCase();
 const uid8=()=>Math.random().toString(36).slice(2,10);
+/* resize image file → base64 data URL, max 800px, JPEG quality 0.55 */
+function resizeImg(file,maxPx=800,q=0.55){return new Promise((res,rej)=>{
+  const r=new FileReader();r.onload=()=>{
+    if(file.type.startsWith("video/")){
+      const vid=document.createElement("video");vid.muted=true;vid.playsInline=true;vid.preload="auto";
+      vid.onloadeddata=()=>{vid.currentTime=0.5};
+      vid.onseeked=()=>{const c=document.createElement("canvas");const s=Math.min(maxPx/Math.max(vid.videoWidth,vid.videoHeight,1),1);c.width=vid.videoWidth*s;c.height=vid.videoHeight*s;c.getContext("2d").drawImage(vid,0,0,c.width,c.height);res(c.toDataURL("image/jpeg",q));URL.revokeObjectURL(vid.src)};
+      vid.onerror=()=>{URL.revokeObjectURL(vid.src);rej(new Error("video"))};
+      vid.src=URL.createObjectURL(file);vid.load();return}
+    const img=new Image();img.onload=()=>{const c=document.createElement("canvas");const s=Math.min(maxPx/Math.max(img.width,img.height,1),1);c.width=img.width*s;c.height=img.height*s;c.getContext("2d").drawImage(img,0,0,c.width,c.height);res(c.toDataURL("image/jpeg",q))};img.onerror=()=>rej(new Error("img"));img.src=r.result};
+  r.onerror=()=>rej(new Error("read"));r.readAsDataURL(file)})}
 const ICON={
  home:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>',
  trophy:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0zM17 5h3v2a3 3 0 0 1-3 3M7 5H4v2a3 3 0 0 0 3 3"/></svg>',
@@ -312,7 +331,7 @@ const DEF_CFG={pPlay:2,pOnTime:1,pGoalTD:1,pGoalTV:2,pGoalHV:3,pGoalTM:5,pHat:2,
 
 /* ---------- state ---------- */
 const S={db:null,user:null,sample:null,assets:null,downloads:null,uid:null,isAdmin:false,canWrite:null,
- members:{},matches:{},votes:{},pred:{},comments:{},teams:{},fund:{},rvotes:{},rounds:{},ratings:{},analysis:{},prefs:{},media:{},feedback:{},pstats:{},mypos:{},news:{},posts:{},pcmts:{},cfg:{},
+ members:{},matches:{},votes:{},pred:{},comments:{},teams:{},fund:{},rvotes:{},rounds:{},ratings:{},analysis:{},prefs:{},media:{},feedback:{},pstats:{},mypos:{},news:{},posts:{},pcmts:{},cfg:{},_postImgs:[],
  meId:null,page:"week",selMatch:null,vtab:"play",truoc:"ai",hv:null,tn:2,drawer:false,sheet:null,modal:null,bxhTab:"tot",bxhPeriod:"quarter",fundMonth:"all",mediaMatch:"",newsTag:"Tất cả",resultMatch:null,chat:[],chatBusy:false,toast:"",loaded:false};
 const C=()=>Object.assign({},DEF_CFG,S.cfg||{});
 /* ---------- derived ---------- */
@@ -574,11 +593,16 @@ function vMemo(){
   const tab=S.memoTab||"feed";
 
   /* compose box — any logged-in member */
+  const prevImgs=(S._postImgs||[]);
   const compose=S.meId?`<div class="post-compose">
     <div class="post-head"><span class="post-av">${esc(initials(nm(S.meId)))}</span><b style="font-size:14px">${esc(nm(S.meId))}</b></div>
     <textarea id="postTxt" placeholder="Chia sẻ khoảnh khắc, cảm xúc về trận đấu…" rows="3"></textarea>
-    <div class="prow"><input id="postImg" placeholder="Dán link ảnh (tuỳ chọn, mỗi link cách nhau bởi dấu phẩy)" style="flex:1;border:1px solid var(--line);border-radius:10px;padding:8px 12px;font-size:13px">
-    <button class="btn pri" data-a="postmemo">Đăng bài</button></div></div>`
+    ${prevImgs.length?`<div class="img-prev">${prevImgs.map((im,i)=>`<div class="thumb"><img src="${esc(im)}" alt=""><button class="rm" data-a="rmpostimg" data-v="${i}">✕</button></div>`).join("")}</div>`:""}
+    <div class="attach-row">
+      <label class="attach-btn" style="cursor:pointer">📷 Ảnh / Video<input id="postFiles" type="file" accept="image/*,video/*" multiple hidden data-a="addpostimg"></label>
+      <span style="flex:1"></span>
+      <button class="btn pri" data-a="postmemo">Đăng bài</button>
+    </div></div>`
     :`<div class="card" style="text-align:center;padding:18px"><b>Chọn tên để đăng bài và bình luận</b><br><button class="btn pri" data-a="modal" data-v="iam" style="margin-top:10px">Chọn tên</button></div>`;
 
   /* render single post */
@@ -1044,7 +1068,8 @@ document.addEventListener("click",async e=>{
   case "fb":{const tx=val("fbT").trim();if(!tx)return toast("Nhập góp ý trước nhé");const id="f"+Date.now().toString(36)+uid8();if(await save("feedback/"+id,{text:tx,who:S.meId||null,t:new Date().toISOString()})){const i=document.getElementById("fbT");if(i)i.value="";toast("Cảm ơn anh đã góp ý")}break}
   case "delmedia":await del("media/"+v);break;
   case "memotab":S.memoTab=v;render();break;
-  case "postmemo":{const txt=val("postTxt").trim();if(!txt||!S.meId)return toast("Viết gì đó trước nhé");const imgRaw=val("postImg").trim();const imgs=imgRaw?imgRaw.split(",").map(s=>s.trim()).filter(Boolean):[];const id="pt"+Date.now().toString(36)+uid8();if(await save("posts/"+id,{text:txt,imgs,who:S.meId,likes:[],t:new Date().toISOString()})){const i=document.getElementById("postTxt");if(i)i.value="";const j=document.getElementById("postImg");if(j)j.value="";toast("Đã đăng bài")}break}
+  case "rmpostimg":{S._postImgs=(S._postImgs||[]);S._postImgs.splice(Number(v),1);render();break}
+  case "postmemo":{const txt=val("postTxt").trim();const imgs=(S._postImgs||[]).slice();if(!txt&&!imgs.length||!S.meId)return toast("Viết gì đó hoặc chọn ảnh trước nhé");const id="pt"+Date.now().toString(36)+uid8();if(await save("posts/"+id,{text:txt,imgs,who:S.meId,likes:[],t:new Date().toISOString()})){const i=document.getElementById("postTxt");if(i)i.value="";S._postImgs=[];toast("Đã đăng bài")}break}
   case "delpost":{if(!S.isAdmin&&(!S.meId||(S.posts[v]||{}).who!==S.meId))return;await del("posts/"+v);const rc=Object.entries(S.pcmts||{}).filter(([,c])=>c.pid===v);for(const[cid]of rc)await del("pcmts/"+cid);toast("Đã xóa bài");break}
   case "likepost":{if(!S.meId)return toast("Chọn tên trước");const p=S.posts[v];if(!p)return;const lk=(p.likes||[]).slice();const idx=lk.indexOf(S.meId);if(idx>=0)lk.splice(idx,1);else lk.push(S.meId);await save("posts/"+v,{likes:lk},true);break}
   case "togglecmt":{if(!S.showCmts)S.showCmts={};S.showCmts[v]=!S.showCmts[v];render();break}
@@ -1066,6 +1091,13 @@ document.addEventListener("change",async e=>{
   else if(a==="mm"){S.mediaMatch=el.value;render()}
   else if(a==="selresult"){S.resultMatch=el.value;render()}
   else if(a==="trollopt"&&S.meId){await save("prefs/"+S.meId,{troll:el.checked});toast(el.checked?"Bot được trêu nhẹ anh":"Bot sẽ không nhắc tên anh khi trêu")}
+  else if(a==="addpostimg"){
+    const files=Array.from(el.files||[]);if(!files.length)return;
+    if((S._postImgs||[]).length+files.length>6){el.value="";toast("Tối đa 6 ảnh/video");return}
+    toast("Đang xử lý "+files.length+" file…");
+    for(const f of files){try{const b64=await resizeImg(f);S._postImgs=(S._postImgs||[]);S._postImgs.push(b64)}catch(e){toast("Lỗi: "+f.name)}}
+    el.value="";render()
+  }
   else if(a==="upload2"&&window.__GAS){await uploadMedia(el)}
   else if(a==="upload"&&S.assets){
     if(!S.mediaMatch){el.value="";return toast("Chọn trận ở ô bên trái trước khi thêm ảnh")}
