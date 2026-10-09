@@ -986,7 +986,7 @@ function shrink(f){return new Promise((res,rej)=>{const img=new Image(),u=URL.cr
 
 function vConf(mv,showNews){const T={play:["ĐÃ XÁC NHẬN: ĐI ĐÁ ⚽","#16c784"],cheer:["ĐÃ XÁC NHẬN: ĐI CỔ VŨ 📣","#22d3ee"],rest:["ĐÃ XÁC NHẬN: NGHỈ TRẬN NÀY","#f5a524"]};const t=mv&&T[mv.s];return t?`<div style="margin-top:10px;padding:14px 10px;border-radius:14px;text-align:center;font-weight:900;font-size:20px;letter-spacing:.3px;line-height:1.25;color:#fff;background:${t[1]}33;border:2px solid ${t[1]}">${t[0]}</div>${showNews?newsFeed():""}`:`<div style="margin-top:10px;padding:14px 10px;border-radius:14px;text-align:center;font-weight:900;font-size:18px;color:#ff8a8a;background:#ff4d4d22;border:2px dashed #ff6b6b">CHƯA VOTE — BẤM 1 TRONG 3 NÚT</div>`}
 function newsFeed(){
-  const arts=(S.news||[]).sort((a,b)=>String(b.t).localeCompare(String(a.t))).slice(0,5);
+  const arts=Object.entries(S.news||{}).map(([id,x])=>({id,...x})).sort((a,b)=>String(b.t).localeCompare(String(a.t))).slice(0,5);
   if(!arts.length)return "";
   const srcHost=u=>{try{return new URL(u).hostname.replace("www.","")}catch(e){return "Nguồn"}};
   return `<div style="margin-top:14px;padding:12px;border-radius:12px;background:var(--soft)">
