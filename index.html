@@ -254,6 +254,7 @@ textarea{resize:vertical;min-height:84px}
 .post-body{font-size:14px;line-height:1.6;margin-bottom:10px;white-space:pre-wrap;word-break:break-word}
 .post-imgs{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px;margin-bottom:10px;border-radius:12px;overflow:hidden}
 .post-imgs img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:10px;cursor:pointer}
+.post-imgs video{width:100%;border-radius:10px;max-height:400px;background:#000}
 .post-actions{display:flex;gap:16px;padding:8px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line);margin-bottom:10px}
 .post-actions button{display:flex;align-items:center;gap:6px;font-size:13px;font-weight:600;color:var(--muted);padding:6px 10px;border-radius:10px}
 .post-actions button:hover,.post-actions button.liked{color:var(--accent)}
@@ -597,7 +598,7 @@ function vMemo(){
   const compose=S.meId?`<div class="post-compose">
     <div class="post-head"><span class="post-av">${esc(initials(nm(S.meId)))}</span><b style="font-size:14px">${esc(nm(S.meId))}</b></div>
     <textarea id="postTxt" placeholder="Chia sẻ khoảnh khắc, cảm xúc về trận đấu…" rows="3"></textarea>
-    ${prevImgs.length?`<div class="img-prev">${prevImgs.map((im,i)=>`<div class="thumb"><img src="${esc(im)}" alt=""><button class="rm" data-a="rmpostimg" data-v="${i}">✕</button></div>`).join("")}</div>`:""}
+    ${prevImgs.length?`<div class="img-prev">${prevImgs.map((im,i)=>{const src=typeof im==='string'?im:im.data;const isV=typeof im==='object'&&im.isVid;return `<div class="thumb">${isV?`<video src="${esc(src)}" muted></video><span class="vid-badge">▶</span>`:`<img src="${esc(src)}" alt="">`}<button class="rm" data-a="rmpostimg" data-v="${i}">✕</button></div>`}).join("")}</div>`:""}
     <div class="attach-row">
       <label class="attach-btn" style="cursor:pointer">📷 Ảnh / Video<input id="postFiles" type="file" accept="image/*,video/*" multiple hidden data-a="addpostimg"></label>
       <span style="flex:1"></span>
@@ -615,7 +616,7 @@ function vMemo(){
       <div class="post-head"><span class="post-av">${esc(initials(nm(p.who)))}</span><div class="post-meta"><div class="pname">${esc(nm(p.who))}</div><div class="ptime">${p.t?esc(fmtDT(p.t)):""}</div></div>
       <span style="margin-left:auto">${(S.isAdmin||p.who===S.meId)?`<button class="btn sm ghost" data-a="delpost" data-v="${p.id}" title="Xóa bài">✕</button>`:""}</span></div>
       <div class="post-body">${esc(p.text||"")}</div>
-      ${imgs.length?`<div class="post-imgs">${imgs.map(u=>`<img loading="lazy" src="${esc(u)}" alt="Ảnh" onerror="this.style.display='none'">`).join("")}</div>`:""}
+      ${imgs.length?`<div class="post-imgs">${imgs.map(item=>{const isV=typeof item==='object'&&item.v;const u=typeof item==='string'?item:item.url;return isV?`<video controls playsinline preload="metadata" src="${esc(u)}" style="width:100%;border-radius:10px;max-height:400px;background:#000"></video>`:`<img loading="lazy" src="${esc(u)}" alt="Ảnh" onerror="this.style.display='none'">`}).join("")}</div>`:""}
       <div class="post-actions">
         <button data-a="likepost" data-v="${p.id}" class="${liked?"liked":""}">♥ ${likes.length||""} Thích</button>
         <button data-a="togglecmt" data-v="${p.id}">💬 ${cmts.length||""} Bình luận</button>
@@ -1069,7 +1070,7 @@ document.addEventListener("click",async e=>{
   case "delmedia":await del("media/"+v);break;
   case "memotab":S.memoTab=v;render();break;
   case "rmpostimg":{S._postImgs=(S._postImgs||[]);S._postImgs.splice(Number(v),1);render();break}
-  case "postmemo":{const txt=val("postTxt").trim();const rawImgs=(S._postImgs||[]).slice();if(!txt&&!rawImgs.length||!S.meId)return toast("Viết gì đó hoặc chọn ảnh trước nhé");let imgs=[];if(rawImgs.length){toast("Đang upload "+rawImgs.length+" ảnh…");for(let i=0;i<rawImgs.length;i++){try{const res=await run("uploadImg",rawImgs[i],"img_"+Date.now()+"_"+i+".jpg");if(res&&res.url)imgs.push(res.url);else imgs.push(rawImgs[i])}catch(e){console.error("Upload img err",e);imgs.push(rawImgs[i])}}}const id="pt"+Date.now().toString(36)+uid8();if(await save("posts/"+id,{text:txt,imgs,who:S.meId,likes:[],t:new Date().toISOString()})){const i=document.getElementById("postTxt");if(i)i.value="";S._postImgs=[];toast("Đã đăng bài")}break}
+  case "postmemo":{const txt=val("postTxt").trim();const rawImgs=(S._postImgs||[]).slice();if(!txt&&!rawImgs.length||!S.meId)return toast("Viết gì đó hoặc chọn ảnh trước nhé");let imgs=[];if(rawImgs.length){toast("Đang upload "+rawImgs.length+" file…");for(let i=0;i<rawImgs.length;i++){try{const item=rawImgs[i];const data=typeof item==='string'?item:item.data;const isVid=typeof item==='object'&&item.isVid;const fname=(typeof item==='object'&&item.name)||('img_'+Date.now()+'_'+i+'.jpg');const res=await run("uploadImg",data,fname);if(res&&res.url){if(isVid||res.vid){const fid=(res.url.match(/\/d\/([^/?]+)/)||[])[1];const vurl=fid?'https://drive.google.com/uc?id='+fid+'&export=download':res.url;imgs.push({url:vurl,v:1})}else imgs.push(res.url)}else{imgs.push(data)}}catch(e){console.error("Upload err",e);const item=rawImgs[i];imgs.push(typeof item==='string'?item:item.data)}}}const id="pt"+Date.now().toString(36)+uid8();if(await save("posts/"+id,{text:txt,imgs,who:S.meId,likes:[],t:new Date().toISOString()})){const i=document.getElementById("postTxt");if(i)i.value="";S._postImgs=[];toast("Đã đăng bài")}break}
   case "delpost":{if(!S.isAdmin&&(!S.meId||(S.posts[v]||{}).who!==S.meId))return;await del("posts/"+v);const rc=Object.entries(S.pcmts||{}).filter(([,c])=>c.pid===v);for(const[cid]of rc)await del("pcmts/"+cid);toast("Đã xóa bài");break}
   case "likepost":{if(!S.meId)return toast("Chọn tên trước");const p=S.posts[v];if(!p)return;const lk=(p.likes||[]).slice();const idx=lk.indexOf(S.meId);if(idx>=0)lk.splice(idx,1);else lk.push(S.meId);await save("posts/"+v,{likes:lk},true);break}
   case "togglecmt":{if(!S.showCmts)S.showCmts={};S.showCmts[v]=!S.showCmts[v];render();break}
@@ -1095,7 +1096,15 @@ document.addEventListener("change",async e=>{
     const files=Array.from(el.files||[]);if(!files.length)return;
     if((S._postImgs||[]).length+files.length>6){el.value="";toast("Tối đa 6 ảnh/video");return}
     toast("Đang xử lý "+files.length+" file…");
-    for(const f of files){try{const b64=await resizeImg(f);S._postImgs=(S._postImgs||[]);S._postImgs.push(b64)}catch(e){toast("Lỗi: "+f.name)}}
+    for(const f of files){try{
+      if(f.type.startsWith("video/")){
+        if(f.size>20*1024*1024){toast(f.name+": video tối đa 20MB");continue}
+        const b64=await new Promise((ok,no)=>{const r=new FileReader();r.onload=()=>ok(r.result);r.onerror=()=>no(new Error("read"));r.readAsDataURL(f)});
+        S._postImgs=(S._postImgs||[]);S._postImgs.push({data:b64,isVid:true,name:f.name})
+      } else {
+        const b64=await resizeImg(f);S._postImgs=(S._postImgs||[]);S._postImgs.push({data:b64,isVid:false})
+      }
+    }catch(e){toast("Lỗi: "+f.name)}}
     el.value="";render()
   }
   else if(a==="upload2"&&window.__GAS){await uploadMedia(el)}
