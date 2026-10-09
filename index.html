@@ -49,19 +49,19 @@ window.claude={use:async n=>{
 <style>
 /* Layout: desktop = fixed sidebar + main (two columns: match story left, vote/predict right). Phone = single column with bottom tab bar and a drawer for the rest. Midnight Wolf palette, pitch-line hero. */
 :root{
-  --bg:#070B20; --card:rgba(20,28,66,.74); --soft:rgba(52,66,130,.38); --line:rgba(255,255,255,.08);
-  --ink:#F5F7FF; --muted:#A8B2D8; --accent:#00D9FF; --accent-ink:#04122A; --ice:#7FDBFF;
-  --blue:#4A9EFF; --orange:#FF8C42; --ok:#4ADE80; --warn:#FBBF24; --bad:#F87171;
-  --shadow:0 10px 36px rgba(0,0,0,.45);
+  --bg:#F0F4F8; --card:#FFFFFF; --soft:rgba(14,165,233,.08); --line:rgba(0,0,0,.08);
+  --ink:#1E293B; --muted:#64748B; --accent:#0EA5E9; --accent-ink:#FFFFFF; --ice:#0284C7;
+  --blue:#0EA5E9; --orange:#F97316; --ok:#22C55E; --warn:#F59E0B; --bad:#EF4444;
+  --shadow:0 4px 20px rgba(0,0,0,.08);
   --sans:"Be Vietnam Pro",system-ui,-apple-system,"Segoe UI",sans-serif; --cond:"Barlow Condensed","Arial Narrow",system-ui,sans-serif;
   --mono:"Barlow Condensed","Arial Narrow",system-ui,sans-serif;
-  --logo:url("data:image/webp;base64,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"); --noise:url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 .05 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n");
-  color-scheme:dark;
+  --logo:url("data:image/webp;base64,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"); --noise:none;
+  color-scheme:light;
 }
 *{box-sizing:border-box}
 html,body{min-height:100%}
 body{margin:0;background-color:var(--bg);color:var(--ink);font:400 14px/1.5 var(--sans);position:relative;
-  background-image:var(--noise),radial-gradient(ellipse 70% 40% at 0% 0%,rgba(0,217,255,.20),transparent 62%),radial-gradient(ellipse 60% 50% at 100% 40%,rgba(74,158,255,.14),transparent 65%),radial-gradient(ellipse 80% 40% at 40% 108%,rgba(127,219,255,.12),transparent 62%),linear-gradient(180deg,#0A1030,#070B20);background-attachment:fixed}
+  background-image:none;background-attachment:fixed}
 body::before{content:"";position:fixed;right:-14vmin;bottom:-8vmin;width:70vmin;height:76vmin;background:var(--logo) center/contain no-repeat;opacity:.05;pointer-events:none;z-index:0}
 #app{position:relative;z-index:1;min-width:0}
 h1,h2,h3{margin:0;text-wrap:balance}
@@ -72,20 +72,20 @@ button{cursor:pointer;border:0;background:none}
 .cond{font-family:var(--cond);font-weight:700;letter-spacing:.01em}
 
 /* shell */
-.side{position:fixed;left:0;top:0;bottom:0;width:250px;padding:14px 12px 16px;display:none;flex-direction:column;gap:6px;background:rgba(7,11,32,.82);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);border-right:1px solid var(--line);overflow-y:auto;z-index:30}
+.side{position:fixed;left:0;top:0;bottom:0;width:250px;padding:14px 12px 16px;display:none;flex-direction:column;gap:6px;background:rgba(255,255,255,.92);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);border-right:1px solid var(--line);overflow-y:auto;z-index:30}
 .brandrow{display:flex;align-items:center;gap:10px;padding:2px 4px 10px;font-weight:800;font-size:17px}
-.mark{width:40px;height:40px;flex:none;background:var(--logo) center/contain no-repeat;filter:drop-shadow(0 0 8px rgba(0,217,255,.35))}
-.me-card{display:flex;align-items:center;gap:10px;width:100%;text-align:left;padding:11px 12px;border-radius:16px;background:linear-gradient(135deg,#0A8FB0,#0A6A8C);color:#fff;margin-bottom:10px}
+.mark{width:40px;height:40px;flex:none;background:var(--logo) center/contain no-repeat;filter:drop-shadow(0 0 8px rgba(14,165,233,.25))}
+.me-card{display:flex;align-items:center;gap:10px;width:100%;text-align:left;padding:11px 12px;border-radius:16px;background:linear-gradient(135deg,#0EA5E9,#0284C7);color:#fff;margin-bottom:10px}
 .me-card .t{font-weight:700;line-height:1.2}.me-card .s{font-size:12px;opacity:.85;line-height:1.3}
 .me-av{width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-weight:700;flex:none}
 .grp{font-size:11px;font-weight:700;color:var(--muted);padding:12px 8px 4px}
 .ni{display:flex;align-items:center;gap:12px;width:100%;padding:10px 12px;border-radius:14px;color:var(--muted);font-weight:600;font-size:15px;text-align:left}
 .ni svg{width:20px;height:20px;flex:none}
-.ni:hover{background:rgba(255,255,255,.05);color:var(--ink)}
-.ni.on{background:rgba(0,217,255,.14);color:var(--accent)}
+.ni:hover{background:rgba(14,165,233,.06);color:var(--ink)}
+.ni.on{background:rgba(14,165,233,.12);color:var(--accent)}
 .side .foot{margin-top:auto;padding:12px 8px 0;font-size:12px;color:var(--muted);line-height:1.5}
 .side .foot b{color:var(--accent);display:block;font-size:12px}
-.scrim{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:29}
+.scrim{position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:29}
 .side.open{display:flex}
 .main{padding:14px 16px 118px;max-width:1240px;margin:0 auto}
 .head{display:flex;align-items:flex-start;gap:12px;flex-wrap:wrap;margin-bottom:14px}
@@ -93,11 +93,11 @@ button{cursor:pointer;border:0;background:none}
 .head h1{font-family:var(--cond);font-weight:800;font-size:38px;line-height:1;letter-spacing:.01em}
 .head .sub{color:var(--muted);font-size:13px;margin-top:4px}
 .hbtns{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-.chip2{display:inline-flex;align-items:center;gap:8px;padding:9px 14px;border-radius:999px;background:rgba(20,28,66,.8);border:1px solid var(--line);font-weight:600;font-size:13px}
+.chip2{display:inline-flex;align-items:center;gap:8px;padding:9px 14px;border-radius:999px;background:#FFFFFF;border:1px solid var(--line);font-weight:600;font-size:13px;box-shadow:0 1px 3px rgba(0,0,0,.06)}
 .chip2 .num{font-size:22px;line-height:1;color:var(--accent)}
 .burger{display:inline-flex;width:40px;height:40px;border-radius:12px;align-items:center;justify-content:center;background:var(--soft)}
 .nav{position:fixed;left:0;right:0;bottom:0;padding:8px 12px calc(10px + env(safe-area-inset-bottom,0px));z-index:20;pointer-events:none}
-.nav ul{pointer-events:auto;list-style:none;margin:0 auto;padding:6px;display:flex;justify-content:space-around;max-width:520px;background:rgba(14,20,52,.88);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);border:1px solid var(--line);border-radius:26px;box-shadow:var(--shadow)}
+.nav ul{pointer-events:auto;list-style:none;margin:0 auto;padding:6px;display:flex;justify-content:space-around;max-width:520px;background:rgba(255,255,255,.92);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);border:1px solid var(--line);border-radius:26px;box-shadow:0 -2px 16px rgba(0,0,0,.08)}
 .nav button{display:flex;flex-direction:column;align-items:center;gap:2px;padding:7px 10px;border-radius:18px;color:var(--muted);font-size:11px;font-weight:600;min-width:56px}
 .nav button.on{color:var(--accent)} .nav svg{width:22px;height:22px}
 .fab{position:fixed;right:16px;bottom:calc(88px + env(safe-area-inset-bottom,0px));z-index:19;width:52px;height:52px;border-radius:50%;background:var(--accent);color:var(--accent-ink);box-shadow:var(--shadow);display:flex;align-items:center;justify-content:center}
@@ -121,38 +121,38 @@ button{cursor:pointer;border:0;background:none}
 .btn:active{transform:scale(.97)}.btn[disabled]{opacity:.45;cursor:not-allowed}
 .btn.pri{background:var(--accent);color:var(--accent-ink)}
 .btn.warn{background:var(--warn);color:#1b1400}
-.btn.ghost{background:rgba(255,255,255,.04);border:1px solid var(--line)}
+.btn.ghost{background:rgba(0,0,0,.02);border:1px solid var(--line)}
 .btn.bad{background:transparent;color:var(--bad);border:1px solid var(--line)}
 .btn.sm{padding:7px 12px;border-radius:11px;font-size:12px}
 .btn.block{width:100%}
 .chip{display:inline-flex;align-items:center;gap:6px;padding:5px 11px;border-radius:999px;background:var(--soft);font-size:13px}
 .pill{display:inline-block;padding:2px 9px;border-radius:999px;font-size:11px;font-weight:700;background:var(--soft);color:var(--muted)}
 .pill.ok{background:rgba(74,222,128,.18);color:var(--ok)}.pill.warn{background:rgba(251,191,36,.2);color:var(--warn)}
-.pill.bad{background:rgba(248,113,113,.18);color:var(--bad)}.pill.acc{background:rgba(0,217,255,.18);color:var(--accent)}
+.pill.bad{background:rgba(248,113,113,.18);color:var(--bad)}.pill.acc{background:rgba(14,165,233,.12);color:var(--accent)}
 .tabs{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none}.tabs::-webkit-scrollbar{display:none}
 .tab{white-space:nowrap;padding:8px 14px;border-radius:999px;font-weight:600;font-size:13px;color:var(--muted);background:var(--soft)}
 .tab.on{background:var(--accent);color:var(--accent-ink)}
 .tab i{font-style:normal;opacity:.75;margin-left:4px}
 .field{display:flex;flex-direction:column;gap:5px;min-width:0}.field>span{font-size:12px;color:var(--muted);font-weight:600}
-input[type=text],input[type=number],input[type=tel],input[type=datetime-local],input[type=month],select,textarea{width:100%;background:rgba(52,66,130,.35);border:1px solid transparent;border-radius:13px;padding:11px 13px;min-width:0}
+input[type=text],input[type=number],input[type=tel],input[type=datetime-local],input[type=month],select,textarea{width:100%;background:rgba(241,245,249,1);border:1px solid rgba(0,0,0,.1);border-radius:13px;padding:11px 13px;min-width:0}
 input:focus,select:focus,textarea:focus{border-color:var(--accent);outline:none}
-select option{background:#141C42;color:var(--ink)}
+select option{background:#FFFFFF;color:var(--ink)}
 textarea{resize:vertical;min-height:84px}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 @media(max-width:380px){.grid2{grid-template-columns:1fr}}
 .list{display:flex;flex-direction:column}
 .li{display:flex;align-items:center;gap:10px;padding:11px 0;border-top:1px solid var(--line);min-width:0}.li:first-child{border-top:0}
-.li>.grow{flex:1;min-width:0}.ell{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.li>.grow{flex:1;min-width:0}.ell{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.ell2{overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
 .av{flex:none;width:36px;height:36px;border-radius:50%;background:var(--soft);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;color:var(--ice)}
 .av.n{font-family:var(--cond);font-size:16px}
 .empty{text-align:center;padding:26px 12px;color:var(--muted)}.empty h3{color:var(--ink);margin-bottom:6px;font-size:16px}
-.toast{position:fixed;left:50%;bottom:calc(96px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:#0A0E27;padding:10px 16px;border-radius:14px;font-weight:600;z-index:60;max-width:calc(100% - 32px)}
+.toast{position:fixed;left:50%;bottom:calc(96px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:#1E293B;color:#FFFFFF;padding:10px 16px;border-radius:14px;font-weight:600;z-index:60;max-width:calc(100% - 32px)}
 @media(min-width:900px){.toast{bottom:28px}}
 .tbl{width:100%;border-collapse:collapse;font-size:13px}
 .tbl th{font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);text-align:right;padding:6px;font-weight:700}
 .tbl td{padding:9px 6px;border-top:1px solid var(--line);text-align:right}.tbl th:first-child,.tbl td:first-child{text-align:left}
 .scroll-x{overflow-x:auto}
-.rk{width:26px;height:26px;border-radius:50%;background:var(--soft);display:inline-flex;align-items:center;justify-content:center;font-family:var(--cond);font-size:15px;font-weight:700;flex:none}.rk.g1{background:var(--accent);color:var(--accent-ink)}.rk.g2{background:rgba(192,192,192,.25);color:#ccc}.rk.g3{background:rgba(205,127,50,.2);color:#cd7f32}
+.rk{width:26px;height:26px;border-radius:50%;background:var(--soft);display:inline-flex;align-items:center;justify-content:center;font-family:var(--cond);font-size:15px;font-weight:700;flex:none}.rk.g1{background:var(--accent);color:var(--accent-ink)}.rk.g2{background:rgba(192,192,192,.25);color:#94A3B8}.rk.g3{background:rgba(205,127,50,.2);color:#cd7f32}
 /* scoring pro */
 .score-header{display:flex;align-items:center;gap:10px;padding:10px 0 6px}.score-header svg{width:24px;height:24px;color:var(--accent);flex:none}
 .score-header h3{font-family:var(--cond);font-weight:800;font-size:20px;letter-spacing:.02em;margin:0}
@@ -160,14 +160,14 @@ textarea{resize:vertical;min-height:84px}
 .pos-pill.TM{background:rgba(74,222,128,.18);color:#4ADE80}.pos-pill.HV{background:rgba(74,158,255,.18);color:#4A9EFF}
 .pos-pill.TV{background:rgba(251,191,36,.18);color:#FBBF24}.pos-pill.TĐ{background:rgba(248,113,113,.18);color:#F87171}
 .score-tbl{width:100%;border-collapse:separate;border-spacing:0;font-size:13px}
-.score-tbl thead th{font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);padding:8px 5px;font-weight:700;text-align:center;border-bottom:2px solid rgba(255,255,255,.12);position:sticky;top:0;background:var(--card)}
+.score-tbl thead th{font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);padding:8px 5px;font-weight:700;text-align:center;border-bottom:2px solid rgba(0,0,0,.08);position:sticky;top:0;background:var(--card)}
 .score-tbl thead th:first-child{text-align:left}
 .score-tbl tbody td{padding:8px 5px;border-bottom:1px solid var(--line);text-align:center;vertical-align:middle}
 .score-tbl tbody td:first-child{text-align:left}
-.score-tbl tbody tr:hover{background:rgba(255,255,255,.03)}
+.score-tbl tbody tr:hover{background:rgba(14,165,233,.04)}
 .score-tbl .pt-cell{font-family:var(--cond);font-weight:700;font-size:18px;color:var(--accent)}
 .score-tbl .pt-neg{color:var(--bad)}
-.mvp-row{background:rgba(0,217,255,.06)!important}
+.mvp-row{background:rgba(14,165,233,.06)!important}
 .mvp-star{color:#FBBF24;font-size:14px;margin-left:4px}
 .rules-grid{display:grid;grid-template-columns:1fr 1fr;gap:0}
 .rule-item{display:flex;align-items:center;gap:8px;padding:10px 12px;border-bottom:1px solid var(--line)}
@@ -182,9 +182,9 @@ textarea{resize:vertical;min-height:84px}
 .dot{width:10px;height:10px;border-radius:50%;display:inline-block}
 .bar2{height:26px;border-radius:99px;overflow:hidden;display:flex;background:var(--soft)}
 .bar2 i{display:flex;align-items:center;justify-content:center;font-style:normal;font-size:12px;font-weight:700;color:#fff;white-space:nowrap;min-width:0}
-.sheet{position:fixed;inset:0;z-index:50;background-color:var(--bg);background-image:var(--noise),radial-gradient(ellipse 80% 40% at 0% 0%,rgba(0,217,255,.18),transparent 62%),linear-gradient(180deg,#0A1030,#070B20);overflow-y:auto;padding:0 16px calc(40px + env(safe-area-inset-bottom,0px))}
+.sheet{position:fixed;inset:0;z-index:50;background-color:var(--bg);background-image:none;overflow-y:auto;padding:0 16px calc(40px + env(safe-area-inset-bottom,0px))}
 .sheet>.in{max-width:560px;margin:0 auto}
-.sheet .bar{display:flex;align-items:center;gap:10px;padding-block:14px;position:sticky;top:0;background:linear-gradient(rgba(7,11,32,.95) 70%,transparent);z-index:2}
+.sheet .bar{display:flex;align-items:center;gap:10px;padding-block:14px;position:sticky;top:0;background:linear-gradient(rgba(240,244,248,.95) 70%,transparent);z-index:2}
 .bubble{padding:10px 13px;border-radius:16px;max-width:88%;white-space:pre-wrap;overflow-wrap:anywhere}
 .bubble.u{align-self:flex-end;background:var(--accent);color:var(--accent-ink);border-bottom-right-radius:5px}
 .bubble.b{align-self:flex-start;background:var(--soft);border-bottom-left-radius:5px}
@@ -199,9 +199,9 @@ textarea{resize:vertical;min-height:84px}
 }
 .notice{display:flex;align-items:center;gap:12px;padding:12px 16px;border-radius:16px;background:var(--warn);color:#2a1d00;margin-bottom:16px}
 .notice b{display:block;line-height:1.3}.notice span{font-size:12px;opacity:.75}
-.hero2{position:relative;overflow:hidden;border-radius:22px;border:3px solid rgba(127,219,255,.85);padding:20px 22px;color:#fff;box-shadow:var(--shadow),0 0 0 1px rgba(0,217,255,.25),0 0 40px rgba(0,217,255,.12);
-  background:repeating-linear-gradient(90deg,rgba(255,255,255,.035) 0 64px,transparent 64px 128px),linear-gradient(135deg,#0C3A63 0%,#0A2A55 55%,#0A2147 100%)}
-.hero2 .pl,.hero2 .pc,.hero2 .pb{position:absolute;border:3px solid rgba(127,219,255,.32);pointer-events:none}
+.hero2{position:relative;overflow:hidden;border-radius:22px;border:3px solid rgba(14,165,233,.5);padding:20px 22px;color:#fff;box-shadow:var(--shadow);
+  background:repeating-linear-gradient(90deg,rgba(255,255,255,.04) 0 64px,transparent 64px 128px),linear-gradient(135deg,#0EA5E9 0%,#0284C7 55%,#0369A1 100%)}
+.hero2 .pl,.hero2 .pc,.hero2 .pb{position:absolute;border:3px solid rgba(255,255,255,.25);pointer-events:none}
 .hero2 .pc{width:330px;height:330px;border-radius:50%;right:-60px;top:-16px}
 .hero2 .pl{width:0;right:105px;top:0;bottom:0;border-width:0 0 0 3px}
 .hero2 .pb{left:-3px;top:-3px;width:170px;height:150px;border-width:0 3px 3px 0}
@@ -213,7 +213,7 @@ textarea{resize:vertical;min-height:84px}
 .hdate{font-family:var(--cond);font-weight:800;font-size:clamp(64px,13vw,104px);line-height:.88}
 .htime{font-family:var(--cond);font-weight:800;font-size:clamp(34px,6vw,52px);line-height:1;text-align:right}
 .hven{font-size:13px;opacity:.85;text-align:right}
-.hbox{margin-top:14px;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 16px;border:1.5px solid rgba(255,255,255,.55);border-radius:14px;background:rgba(5,15,40,.45)}
+.hbox{margin-top:14px;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 16px;border:1.5px solid rgba(255,255,255,.55);border-radius:14px;background:rgba(0,0,0,.15)}
 .hbox .l{font-size:13px;line-height:1.35}.hbox .l small{display:block;opacity:.7;font-size:12px}
 .hbox .t{font-family:var(--cond);font-weight:800;font-size:clamp(34px,6.5vw,52px);line-height:1;color:var(--warn)}
 .hbox .sc{font-family:var(--cond);font-weight:800;font-size:clamp(40px,8vw,60px);line-height:1;display:flex;gap:14px;align-items:center;width:100%;justify-content:center}
@@ -228,27 +228,27 @@ textarea{resize:vertical;min-height:84px}
 .vstrip{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
 .vstrip .ic{width:40px;height:40px;border-radius:12px;background:var(--soft);display:flex;align-items:center;justify-content:center;flex:none}
 .pchips{display:flex;flex-wrap:wrap;gap:8px}
-.pchip{display:inline-flex;align-items:center;gap:8px;padding:5px 12px 5px 5px;border-radius:999px;background:rgba(52,66,130,.4);font-weight:600;font-size:13px}
+.pchip{display:inline-flex;align-items:center;gap:8px;padding:5px 12px 5px 5px;border-radius:999px;background:rgba(14,165,233,.08);font-weight:600;font-size:13px}
 .pchip.me{outline:1.5px solid var(--accent)}
-.pchip .a2{width:26px;height:26px;border-radius:50%;background:rgba(0,217,255,.18);color:var(--ice);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800}
+.pchip .a2{width:26px;height:26px;border-radius:50%;background:rgba(14,165,233,.15);color:var(--ice);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800}
 .hlv{font-size:10px;font-weight:800;color:var(--warn);background:rgba(251,191,36,.15);border-radius:6px;padding:1px 6px}
 .pred{display:flex;align-items:center;justify-content:center;gap:12px}
 .pred label{display:flex;flex-direction:column;align-items:center;gap:6px;font-weight:700;font-size:13px}
-.pred input{width:84px;height:84px;text-align:center;font-family:var(--cond);font-weight:800;font-size:46px;border-radius:18px;padding:0;background:rgba(7,11,32,.55);border:1px solid var(--line)}
+.pred input{width:84px;height:84px;text-align:center;font-family:var(--cond);font-weight:800;font-size:46px;border-radius:18px;padding:0;background:rgba(241,245,249,1);border:1px solid rgba(0,0,0,.1)}
 .pred .co{font-family:var(--cond);font-weight:800;font-size:36px;color:var(--muted);margin-top:22px}
-.ai{border-color:rgba(251,191,36,.35);background:linear-gradient(180deg,rgba(80,56,10,.35),rgba(20,28,66,.74))}
+.ai{border-color:rgba(251,191,36,.35);background:linear-gradient(180deg,rgba(251,191,36,.08),rgba(255,255,255,1))}
 .teams2{display:grid;grid-template-columns:minmax(0,1fr);gap:14px}
 @media(min-width:700px){.teams2{grid-template-columns:1fr 1fr}}
 .gal{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
 .gal a,.gal div.ph{display:block;aspect-ratio:1;border-radius:14px;overflow:hidden;background:var(--soft)}
 .gal img{width:100%;height:100%;object-fit:cover;display:block}
 .stat4{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px}
-.stat4 .s{background:rgba(52,66,130,.3);border-radius:16px;padding:14px}
+.stat4 .s{background:rgba(14,165,233,.06);border-radius:16px;padding:14px}
 .stat4 .s b{display:block;font-family:var(--cond);font-weight:800;font-size:38px;line-height:1;color:var(--ice)}
 @media(prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 
-<div id="app"><div style="display:flex;flex-direction:column;align-items:center;gap:10px;padding-top:24vh;color:#A8B2D8;font-size:12px;letter-spacing:.14em">ĐANG TẢI…</div></div>
+<div id="app"><div style="display:flex;flex-direction:column;align-items:center;gap:10px;padding-top:24vh;color:#64748B;font-size:12px;letter-spacing:.14em">ĐANG TẢI…</div></div>
 
 <script>
 (function(){
@@ -290,8 +290,8 @@ const DEF_CFG={pPlay:2,pOnTime:1,pGoalTD:1,pGoalTV:2,pGoalHV:3,pGoalTM:5,pHat:2,
 
 /* ---------- state ---------- */
 const S={db:null,user:null,sample:null,assets:null,downloads:null,uid:null,isAdmin:false,canWrite:null,
- members:{},matches:{},votes:{},pred:{},comments:{},teams:{},fund:{},rvotes:{},rounds:{},ratings:{},analysis:{},prefs:{},media:{},feedback:{},pstats:{},mypos:{},cfg:{},
- meId:null,page:"week",selMatch:null,vtab:"play",truoc:"ai",hv:null,tn:2,drawer:false,sheet:null,modal:null,bxhTab:"tot",bxhPeriod:"quarter",fundMonth:"all",mediaMatch:"",chat:[],chatBusy:false,toast:"",loaded:false};
+ members:{},matches:{},votes:{},pred:{},comments:{},teams:{},fund:{},rvotes:{},rounds:{},ratings:{},analysis:{},prefs:{},media:{},feedback:{},pstats:{},mypos:{},news:{},cfg:{},
+ meId:null,page:"week",selMatch:null,vtab:"play",truoc:"ai",hv:null,tn:2,drawer:false,sheet:null,modal:null,bxhTab:"tot",bxhPeriod:"quarter",fundMonth:"all",mediaMatch:"",newsTag:"Tất cả",resultMatch:null,chat:[],chatBusy:false,toast:"",loaded:false};
 const C=()=>Object.assign({},DEF_CFG,S.cfg||{});
 /* ---------- derived ---------- */
 const mem=id=>S.members[id];
@@ -327,7 +327,7 @@ function paint(){
   $app.querySelectorAll("input:not([type=file]),select,textarea").forEach(el=>{if(!el.id)return;keep[el.id]=el.type==="checkbox"?el.checked:el.value});
   const ae=document.activeElement;if(ae&&ae.id&&$app.contains(ae)){focusId=ae.id;try{selS=ae.selectionStart;selE=ae.selectionEnd}catch(e){}}
   const sh=$app.querySelector(".sheet");sy=sh?sh.scrollTop:null;
-  $app.innerHTML=S.loaded?view():'<div style="display:flex;justify-content:center;padding-top:24vh;color:#A8B2D8;font-size:12px;letter-spacing:.14em">ĐANG TẢI…</div>';
+  $app.innerHTML=S.loaded?view():'<div style="display:flex;justify-content:center;padding-top:24vh;color:#64748B;font-size:12px;letter-spacing:.14em">ĐANG TẢI…</div>';
   $app.querySelectorAll("input:not([type=file]),select,textarea").forEach(el=>{if(el.id&&keep[el.id]!==undefined){if(el.type==="checkbox")el.checked=keep[el.id];else if(el.tagName==="SELECT"){if([...el.options].some(o=>o.value===keep[el.id]))el.value=keep[el.id]}else el.value=keep[el.id]}});
   const sh2=$app.querySelector(".sheet");if(sh2&&sy!=null)sh2.scrollTop=sy;
   if(wy&&Math.abs(window.scrollY-wy)>2)window.scrollTo(0,wy);
@@ -339,7 +339,7 @@ setInterval(tickCd,1000);
 
 /* ---------- shell ---------- */
 const NAV=[["Đội bóng",[["week","Tuần này","home"],["bxh","Xếp hạng","trophy"],["hist","Lịch sử","clock"],["memo","Kỷ niệm","image"],["quy","Quỹ","wallet"]]],
- ["Giải trí",[["play","Sân chơi","game"],["season","Tổng kết mùa","gift"]]],
+ ["Giải trí",[["play","Sân chơi","game"],["season","Tổng kết mùa","gift"],["news","Bóng đá","soccer"]]],
  ["Tài khoản",[["me","Cá nhân","user"],["fb","Góp ý","bulb"]]]];
 const ICO2={
  clock:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>',
@@ -347,9 +347,11 @@ const ICO2={
  game:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 11h4M8 9v4M15 12h.01M18 10h.01"/><path d="M17.3 5H6.7a4 4 0 0 0-3.9 3.1L1.6 15a2.7 2.7 0 0 0 4.7 2L8 15h8l1.7 2a2.7 2.7 0 0 0 4.7-2l-1.2-6.9A4 4 0 0 0 17.3 5z"/></svg>',
  gift:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="8" width="18" height="4"/><path d="M12 8v13M19 12v9H5v-9M7.5 8a2.5 2.5 0 1 1 0-5C11 3 12 8 12 8s1-5 4.5-5a2.5 2.5 0 1 1 0 5"/></svg>',
  bulb:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6M10 22h4M12 2a7 7 0 0 0-4 12.7c.6.5 1 1.3 1 2.3h6c0-1 .4-1.8 1-2.3A7 7 0 0 0 12 2z"/></svg>',
- menu:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>'};
+ menu:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>',
+ soccer:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a15 15 0 0 1 0 20M12 2a15 15 0 0 0 0 20M2 12h20"/></svg>',
+ clipboard:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2"/><path d="M9 2h6v3H9z"/><path d="M9 12h6M9 16h4"/></svg>'};
 const ic=n=>ICON[n]||ICO2[n]||"";
-const TITLES={week:"Tuần này",bxh:"Xếp hạng",hist:"Lịch sử",memo:"Kỷ niệm",quy:"Quỹ",play:"Sân chơi",season:"Tổng kết mùa",me:"Cá nhân",fb:"Góp ý",admin:"Quản trị"};
+const TITLES={week:"Tuần này",bxh:"Xếp hạng",hist:"Lịch sử",memo:"Kỷ niệm",quy:"Quỹ",play:"Sân chơi",season:"Tổng kết mùa",news:"Bóng đá",result:"Kết quả trận",me:"Cá nhân",fb:"Góp ý",admin:"Quản trị"};
 function sidebar(){
   const m=S.meId?mem(S.meId):null,nx=nextMatch();
   const groups=NAV.map(([g,items])=>`<div class="grp">${g}</div>${items.map(([k,l,i])=>`<button class="ni ${S.page===k?"on":""}" data-a="page" data-v="${k}">${ic(i)}${l}</button>`).join("")}`).join("")
@@ -375,7 +377,7 @@ function view(){
   let body="";
   const p=S.page;
   if(p==="week")body=vWeek();else if(p==="bxh")body=vBxh();else if(p==="quy")body=vQuy();else if(p==="me")body=vMe();else if(p==="admin")body=vAdmin();
-  else if(p==="hist")body=vHist();else if(p==="memo")body=vMemo();else if(p==="play")body=vPlay();else if(p==="season")body=vSeason();else if(p==="fb")body=vFb();
+  else if(p==="hist")body=vHist();else if(p==="memo")body=vMemo();else if(p==="play")body=vPlay();else if(p==="season")body=vSeason();else if(p==="news")body=vNews();else if(p==="result")body=vResult();else if(p==="fb")body=vFb();
   const bn=[["week","Tuần này","home"],["bxh","Xếp hạng","trophy"],["quy","Quỹ","wallet"],["me","Cá nhân","user"]];
   return `${sidebar()}<div class="main"><div class="wrap">${topHead()}${p==="week"?noticeBar():""}${body}</div></div>
   <nav class="nav"><ul>${bn.map(t=>`<li><button data-a="page" data-v="${t[0]}" class="${S.page===t[0]?"on":""}">${ic(t[2])}${t[1]}</button></li>`).join("")}<li><button data-a="drawer">${ICO2.menu}Thêm</button></li></ul></nav>
@@ -416,7 +418,7 @@ function heroCard(m){
    <div class="hbox">${mid}</div>
    ${fin&&m.notes?`<p style="margin:10px 2px 0;font-size:13px;opacity:.9">${esc(m.notes)}</p>`:""}
    <div class="hcount"><b>${play}</b><em>/${slots}</em><span style="font-size:13px;opacity:.8">người đá · ${play>=slots?"dư "+(play-slots)+" người":"thiếu "+(slots-play)+" người"}</span></div>${segs}
-   <div class="hleg"><span style="color:#fff">${play} đá</span><span style="color:#7FDBFF">${g.cheer.length} cổ vũ</span><span style="color:#A8B2D8">${g.rest.length} nghỉ</span><span style="color:#7d8ab8">${g.pending.length} chưa vote</span></div></div>`;
+   <div class="hleg"><span style="color:#fff">${play} đá</span><span style="color:#E0F2FE">${g.cheer.length} cổ vũ</span><span style="color:rgba(255,255,255,.7)">${g.rest.length} nghỉ</span><span style="color:rgba(255,255,255,.5)">${g.pending.length} chưa vote</span></div></div>`;
 }
 function voteStrip(m){
   const locked=voteLocked(m),mv=S.meId?voteOf(m.id,S.meId):null,ro=S.canWrite===false;
@@ -567,6 +569,59 @@ function vSeason(){
   const all=fundList(),fi=all.filter(t=>t.type==="in"&&inPeriod(t.date,per)).reduce((s,t)=>s+t.amount,0),fo=all.filter(t=>t.type==="out"&&inPeriod(t.date,per)).reduce((s,t)=>s+t.amount,0);
   return `<div class="stat4"><div class="s"><b>${fin.length}</b>trận đã đá</div><div class="s"><b>${goals}</b>bàn thắng</div><div class="s"><b>${bw}-${dr}-${ow}</b>Xanh thắng - hòa - Cam thắng</div><div class="s"><b>${(goals/fin.length).toFixed(1)}</b>bàn mỗi trận</div></div>
   <div class="card"><div class="list"><div class="li"><div class="grow muted">Chuyên cần nhất</div><b>${top("play").replace(/ · (\d+)/," · $1 trận")}</b></div><div class="li"><div class="grow muted">Thánh dự đoán</div><b>${top("pred").replace(/ · (\d+)/," · $1 điểm")}</b></div><div class="li"><div class="grow muted">Thánh nhậu</div><b>${top("went").replace(/ · (\d+)/," · $1 lần")}</b></div><div class="li"><div class="grow muted">Thu quỹ năm nay</div><b>${vnd(fi)}</b></div><div class="li"><div class="grow muted">Chi quỹ năm nay</div><b>${vnd(fo)}</b></div><div class="li"><div class="grow"><b>Dư/thiếu năm nay</b></div><b style="color:${fi-fo>=0?"var(--ok)":"var(--bad)"}">${fi-fo>=0?"Dư ":"Thiếu "}${vnd(Math.abs(fi-fo))}</b></div></div></div>`;
+}
+function vNews(){
+  const articles=(S.news||[]).sort((a,b)=>String(b.t).localeCompare(String(a.t)));
+  const tags=["Tất cả","Việt Nam","Ngoại hạng Anh","Champions League","La Liga","Serie A","Chuyển nhượng"];
+  const tag=S.newsTag||"Tất cả";
+  const filtered=tag==="Tất cả"?articles:articles.filter(a=>(a.tag||"").includes(tag));
+  return `<div class="stack">
+   <div class="card"><div class="lbl">Tin tức bóng đá</div>
+   <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px">${tags.map(t=>`<button class="btn sm ${tag===t?"pri":"ghost"}" data-a="newstag" data-v="${t}" style="font-size:13px;padding:6px 12px">${t}</button>`).join("")}</div>
+   ${filtered.length?filtered.map(a=>`<div class="li" style="cursor:pointer;padding:12px 0;border-bottom:1px solid var(--line);align-items:flex-start;gap:12px" data-a="newsdet" data-v="${a.id}">
+    ${a.img?`<img src="${esc(a.img)}" style="width:80px;height:56px;border-radius:8px;object-fit:cover;flex-shrink:0" alt="">`:""}
+    <div style="min-width:0"><div style="font-weight:700;line-height:1.35;margin-bottom:4px" class="ell2">${esc(a.title||"")}</div>
+    <div class="tiny muted">${a.tag?`<span style="color:var(--accent);font-weight:600">${esc(a.tag)}</span> · `:""}${a.t?esc(fmtDT(a.t)):""}</div></div></div>`).join("")
+    :`<div class="empty"><p>Chưa có tin nào${tag!=="Tất cả"?" trong mục "+tag:""}.</p></div>`}
+   </div>
+   ${S.isAdmin?`<div class="card stack"><div class="lbl">Đăng tin mới</div>
+    <input id="nwTitle" placeholder="Tiêu đề tin" maxlength="200">
+    <textarea id="nwBody" placeholder="Nội dung (mô tả ngắn)" maxlength="2000" rows="3"></textarea>
+    <input id="nwImg" placeholder="Link ảnh minh hoạ (tuỳ chọn)" maxlength="500">
+    <select id="nwTag">${tags.filter(t=>t!=="Tất cả").map(t=>`<option>${t}</option>`).join("")}</select>
+    <button class="btn pri" data-a="postnews">Đăng tin</button></div>`:""}
+  </div>`;
+}
+function vResult(){
+  const fin=matchList().sort((a,b)=>String(b.kickoff).localeCompare(String(a.kickoff)));
+  const sel=S.resultMatch||((fin[0]||{}).id);
+  const m=sel?S.matches[sel]:null;
+  const ps=sel?S.pstats[sel]:null;
+  const players=m?activeMembers():[];
+  const played=ps&&ps.pl?ps.pl:[];
+  return `<div class="stack">
+   <div class="card"><div class="lbl">Kết quả sau trận đấu</div>
+   <p class="tiny muted" style="margin:0 0 10px">Admin chọn trận và nhập thống kê cầu thủ. Dữ liệu sẽ tự cập nhật BXH.</p>
+   <select id="rMatch" style="width:100%" data-a="selresult">${fin.map(mt=>`<option value="${mt.id}" ${mt.id===sel?"selected":""}>${esc(fmtDT(mt.kickoff))} — ${esc(mt.venue||"")}</option>`).join("")}</select></div>
+   ${m?`<div class="card stack"><div class="lbl">Tỉ số</div>
+    <div style="display:flex;gap:10px;align-items:center;justify-content:center">
+     <div style="text-align:center"><div class="tiny" style="color:var(--blue);font-weight:700">Xanh</div><input id="rSb" type="number" min="0" value="${m.sb!=null?m.sb:""}" style="width:60px;text-align:center;font-size:24px;font-weight:900"></div>
+     <span style="font-size:24px;font-weight:700;color:var(--muted)">—</span>
+     <div style="text-align:center"><div class="tiny" style="color:var(--orange);font-weight:700">Cam</div><input id="rSo" type="number" min="0" value="${m.so!=null?m.so:""}" style="width:60px;text-align:center;font-size:24px;font-weight:900"></div>
+    </div></div>
+   <div class="card stack"><div class="lbl">Cầu thủ ra sân</div>
+    <div class="pchips">${players.map(p=>`<button class="pchip ${played.includes(p.id)?"me":""}" data-a="rpl" data-v="${p.id}"><i class="a2">${esc(initials(nm(p.id)))}</i>${esc(nm(p.id))}</button>`).join("")}</div></div>
+   ${played.length?`<div class="card stack"><div class="lbl">Thống kê cầu thủ</div>
+    <div style="overflow-x:auto"><table class="statTable"><thead><tr><th>Cầu thủ</th><th>Bàn</th><th>KT</th><th>ĐG</th><th title="Sạch lưới">SL</th><th title="Cản phạt đền">PĐ</th><th title="Thẻ vàng">🟨</th><th title="Thẻ đỏ">🟥</th></tr></thead>
+    <tbody>${played.map(id=>{const g=(ps.g||{})[id]||0,a=(ps.a||{})[id]||0,ot=(ps.ot||[]).includes(id),cs=(ps.cs||[]).includes(id),pp=(ps.pp||[]).includes(id),yc=(ps.yc||{})[id]||0,rc=(ps.rc||{})[id]||0;
+    return `<tr><td style="white-space:nowrap">${esc(nm(id))}</td><td><input type="number" min="0" value="${g}" data-a="rstat" data-k="g" data-p="${id}" style="width:44px;text-align:center"></td><td><input type="number" min="0" value="${a}" data-a="rstat" data-k="a" data-p="${id}" style="width:44px;text-align:center"></td><td><input type="checkbox" ${ot?"checked":""} data-a="rchk" data-k="ot" data-p="${id}"></td><td><input type="checkbox" ${cs?"checked":""} data-a="rchk" data-k="cs" data-p="${id}"></td><td><input type="checkbox" ${pp?"checked":""} data-a="rchk" data-k="pp" data-p="${id}"></td><td><input type="number" min="0" value="${yc}" data-a="rstat" data-k="yc" data-p="${id}" style="width:44px;text-align:center"></td><td><input type="number" min="0" value="${rc}" data-a="rstat" data-k="rc" data-p="${id}" style="width:44px;text-align:center"></td></tr>`}).join("")}</tbody></table></div>
+    <div style="margin-top:10px"><label class="tiny">MVP trận này:</label><select id="rMvp" style="width:100%"><option value="">— Chưa chọn —</option>${played.map(id=>`<option value="${id}" ${ps.mvp===id?"selected":""}>${esc(nm(id))}</option>`).join("")}</select></div>
+    <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">
+     <label class="tiny" style="width:100%">Đóng tiền đầy đủ:</label>${played.map(id=>`<label style="display:flex;gap:4px;align-items:center;font-size:13px"><input type="checkbox" ${(ps.pay||[]).includes(id)?"checked":""} data-a="rchk" data-k="pay" data-p="${id}">${esc(nm(id))}</label>`).join("")}
+    </div>
+    <button class="btn pri block" data-a="saveresult" style="margin-top:14px">💾 Lưu kết quả trận</button></div>`:""}
+   `:"<div class=\"empty\">Chưa có trận nào.</div>"}
+  </div>`;
 }
 function vFb(){
   const list=Object.entries(S.feedback).map(([id,f])=>({id,...f})).sort((a,b)=>String(b.t).localeCompare(String(a.t)));
@@ -802,13 +857,13 @@ async function exportPng(mid){
   const m=S.matches[mid],tv=teamView(mid);if(!m||!tv)return;
   if(!S.downloads)return toast("Máy này chưa hỗ trợ tải ảnh");
   const size=m.teamSize||C().teamSize,cv=document.createElement("canvas"),W=1080,Hh=Math.max(900,420+Math.max(tv.blue.length,tv.orange.length)*64+120);cv.width=W;cv.height=Hh;const x=cv.getContext("2d");
-  const g=x.createLinearGradient(0,0,0,Hh);g.addColorStop(0,"#0C3A63");g.addColorStop(1,"#070B20");x.fillStyle=g;x.fillRect(0,0,W,Hh);
+  const g=x.createLinearGradient(0,0,0,Hh);g.addColorStop(0,"#0EA5E9");g.addColorStop(1,"#0369A1");x.fillStyle=g;x.fillRect(0,0,W,Hh);
   try{const src=getComputedStyle(document.documentElement).getPropertyValue("--logo").trim().replace(/^url\(["']?/,"").replace(/["']?\)$/,"");const img=new Image();img.src=src;await img.decode();x.drawImage(img,W/2-70,36,140,153)}catch(e){}
   x.textAlign="center";x.fillStyle="#fff";x.font="800 54px 'Barlow Condensed',Arial Narrow,sans-serif";x.fillText("ĐỘI HÌNH · FC NGUYỄN HUỆ",W/2,250);
-  x.font="500 28px Arial,sans-serif";x.fillStyle="#A8B2D8";x.fillText(fmtDT(m.kickoff)+" · "+m.venue,W/2,296);
-  [["XANH","#4A9EFF",tv.blue,60],["CAM","#FF8C42",tv.orange,W/2+20]].forEach(([n,col,ids,left])=>{
+  x.font="500 28px Arial,sans-serif";x.fillStyle="#E0F2FE";x.fillText(fmtDT(m.kickoff)+" · "+m.venue,W/2,296);
+  [["XANH","#38BDF8",tv.blue,60],["CAM","#FB923C",tv.orange,W/2+20]].forEach(([n,col,ids,left])=>{
     x.textAlign="left";x.fillStyle=col;x.font="800 44px 'Barlow Condensed',Arial Narrow,sans-serif";x.fillText("ĐỘI "+n,left,372);
-    ids.forEach((id,i)=>{const y=426+i*64;x.fillStyle=i<size?"#F5F7FF":"#7d8ab8";x.font="600 30px Arial,sans-serif";const p=posOf(id)[0]||"";x.fillText((i+1)+". "+nm(id),left,y);x.fillStyle="#7FDBFF";x.font="600 22px Arial,sans-serif";x.textAlign="right";x.fillText(p+(i>=size?" · dự bị":""),left+460,y);x.textAlign="left"})});
+    ids.forEach((id,i)=>{const y=426+i*64;x.fillStyle=i<size?"#FFFFFF":"rgba(255,255,255,.5)";x.font="600 30px Arial,sans-serif";const p=posOf(id)[0]||"";x.fillText((i+1)+". "+nm(id),left,y);x.fillStyle="#BAE6FD";x.font="600 22px Arial,sans-serif";x.textAlign="right";x.fillText(p+(i>=size?" · dự bị":""),left+460,y);x.textAlign="left"})});
   const blob=await new Promise(r=>cv.toBlob(r,"image/png"));
   try{await S.downloads.save({filename:"doi-hinh-"+fmtD(m.kickoff).replace(/\//g,"-")+".png",data:blob})}catch(e){if(e&&e.code!=="declined")toast("Chưa tải được ảnh")}
 }
@@ -917,6 +972,11 @@ document.addEventListener("click",async e=>{
   case "fb":{const tx=val("fbT").trim();if(!tx)return toast("Nhập góp ý trước nhé");const id="f"+Date.now().toString(36)+uid8();if(await save("feedback/"+id,{text:tx,who:S.meId||null,t:new Date().toISOString()})){const i=document.getElementById("fbT");if(i)i.value="";toast("Cảm ơn anh đã góp ý")}break}
   case "delmedia":await del("media/"+v);break;
   case "delfb":await del("feedback/"+v);break;
+  case "newstag":S.newsTag=v;render();break;
+  case "postnews":{const title=val("nwTitle").trim(),body=val("nwBody").trim();if(!title)return toast("Nhập tiêu đề tin");const id="n"+Date.now().toString(36)+uid8();if(await save("news/"+id,{title,body,img:val("nwImg").trim(),tag:val("nwTag"),who:S.meId||null,t:new Date().toISOString()})){const i=document.getElementById("nwTitle");if(i)i.value="";const i2=document.getElementById("nwBody");if(i2)i2.value="";const i3=document.getElementById("nwImg");if(i3)i3.value="";toast("Đã đăng tin")}break}
+  case "selresult":S.resultMatch=el.value;render();break;
+  case "rpl":{if(!S.isAdmin)return;const mid2=S.resultMatch;if(!mid2)return;const ps=Object.assign({},S.pstats[mid2]||{});const pl=(ps.pl||[]).slice();const idx=pl.indexOf(v);if(idx>=0)pl.splice(idx,1);else pl.push(v);ps.pl=pl;await save("pstats/"+mid2,ps);break}
+  case "saveresult":{if(!S.isAdmin)return;const mid2=S.resultMatch;if(!mid2)return;const sb=val("rSb"),so=val("rSo");if(sb===""||so==="")return toast("Nhập tỉ số");const ps=Object.assign({},S.pstats[mid2]||{});const pl=ps.pl||[];const g={},ac={},yc2={},rc2={},ot2=[],cs2=[],pp2=[],pay2=[];pl.forEach(id=>{const gv=document.querySelector('[data-a="rstat"][data-k="g"][data-p="'+id+'"]');if(gv&&+gv.value)g[id]=+gv.value;const av=document.querySelector('[data-a="rstat"][data-k="a"][data-p="'+id+'"]');if(av&&+av.value)ac[id]=+av.value;const ycv=document.querySelector('[data-a="rstat"][data-k="yc"][data-p="'+id+'"]');if(ycv&&+ycv.value)yc2[id]=+ycv.value;const rcv=document.querySelector('[data-a="rstat"][data-k="rc"][data-p="'+id+'"]');if(rcv&&+rcv.value)rc2[id]=+rcv.value;const otc=document.querySelector('[data-a="rchk"][data-k="ot"][data-p="'+id+'"]');if(otc&&otc.checked)ot2.push(id);const csc=document.querySelector('[data-a="rchk"][data-k="cs"][data-p="'+id+'"]');if(csc&&csc.checked)cs2.push(id);const ppc=document.querySelector('[data-a="rchk"][data-k="pp"][data-p="'+id+'"]');if(ppc&&ppc.checked)pp2.push(id);const payc=document.querySelector('[data-a="rchk"][data-k="pay"][data-p="'+id+'"]');if(payc&&payc.checked)pay2.push(id)});const mvp2=val("rMvp")||null;if(await save("pstats/"+mid2,{g,a:ac,yc:yc2,rc:rc2,ot:ot2,cs:cs2,pp:pp2,pay:pay2,sup:[],pl,mvp:mvp2,t:new Date().toISOString()})){await save("matches/"+mid2,{status:"finished",sb:Number(sb),so:Number(so)},true);toast("Đã lưu kết quả trận")}break}
   }
 });
 document.addEventListener("change",async e=>{
@@ -925,6 +985,7 @@ document.addEventListener("change",async e=>{
   else if(a==="fm"){S.fundMonth=el.value;render()}
   else if(a==="hv"){S.hv=el.value?{m:el.dataset.m,n:Number(el.value)}:null;render()}
   else if(a==="mm"){S.mediaMatch=el.value;render()}
+  else if(a==="selresult"){S.resultMatch=el.value;render()}
   else if(a==="trollopt"&&S.meId){await save("prefs/"+S.meId,{troll:el.checked});toast(el.checked?"Bot được trêu nhẹ anh":"Bot sẽ không nhắc tên anh khi trêu")}
   else if(a==="upload2"&&window.__GAS){await uploadMedia(el)}
   else if(a==="upload"&&S.assets){
@@ -939,10 +1000,10 @@ document.addEventListener("keydown",e=>{if(e.key==="Enter"&&e.target.id==="chatI
 /* ---------- boot ---------- */
 async function boot(){
   try{S.db=await claude.use("db");S.user=await claude.use("user");S.sample=await claude.use("sample");S.assets=await claude.use("assets");S.downloads=await claude.use("downloads")}catch(e){}
-  if(!S.db){$app.innerHTML='<div style="text-align:center;padding:24vh 20px;color:#A8B2D8"><h3 style="color:#F5F7FF">Cần đăng nhập</h3><p>Anh đăng nhập claude.ai và mở lại trang này để dùng app FC Nguyễn Huệ.</p></div>';return}
+  if(!S.db){$app.innerHTML='<div style="text-align:center;padding:24vh 20px;color:#64748B"><h3 style="color:#1E293B">Cần đăng nhập</h3><p>Anh đăng nhập claude.ai và mở lại trang này để dùng app FC Nguyễn Huệ.</p></div>';return}
   try{S.uid=S.user?await S.user.id():null;S.isAdmin=S.user?await S.user.canEdit():false;S.canWrite=S.user?await S.user.can("data.write"):null}catch(e){}
   const sub=(name,key)=>S.db.collection(name).onSnapshot(s=>{const o={};s.docs.forEach(d=>{o[d.id]=d.data()});S[key]=o;render()},()=>{});
-  ["members","matches","votes","pred","comments","teams","fund","rvotes","rounds","ratings","analysis","prefs","media","feedback","pstats","mypos"].forEach(n=>sub(n,n));
+  ["members","matches","votes","pred","comments","teams","fund","rvotes","rounds","ratings","analysis","prefs","media","feedback","pstats","mypos","news"].forEach(n=>sub(n,n));
   S.db.doc("cfg/club").onSnapshot(d=>{S.cfg=d.exists?d.data():{};render()},()=>{});
   if(S.uid){try{const me=await S.db.doc("data/users/"+S.uid+"/me").get();if(me.exists)S.meId=me.data().m}catch(e){}}
   if(S.meId&&!S.isAdmin&&window.__memCheck){try{const ok=await window.__memCheck();if(!ok||window.__tokId()!==S.meId)S.meId=null}catch(e){}}
