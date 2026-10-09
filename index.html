@@ -152,7 +152,31 @@ textarea{resize:vertical;min-height:84px}
 .tbl th{font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);text-align:right;padding:6px;font-weight:700}
 .tbl td{padding:9px 6px;border-top:1px solid var(--line);text-align:right}.tbl th:first-child,.tbl td:first-child{text-align:left}
 .scroll-x{overflow-x:auto}
-.rk{width:26px;height:26px;border-radius:50%;background:var(--soft);display:inline-flex;align-items:center;justify-content:center;font-family:var(--cond);font-size:15px;font-weight:700;flex:none}.rk.g1{background:var(--accent);color:var(--accent-ink)}
+.rk{width:26px;height:26px;border-radius:50%;background:var(--soft);display:inline-flex;align-items:center;justify-content:center;font-family:var(--cond);font-size:15px;font-weight:700;flex:none}.rk.g1{background:var(--accent);color:var(--accent-ink)}.rk.g2{background:rgba(192,192,192,.25);color:#ccc}.rk.g3{background:rgba(205,127,50,.2);color:#cd7f32}
+/* scoring pro */
+.score-header{display:flex;align-items:center;gap:10px;padding:10px 0 6px}.score-header svg{width:24px;height:24px;color:var(--accent);flex:none}
+.score-header h3{font-family:var(--cond);font-weight:800;font-size:20px;letter-spacing:.02em;margin:0}
+.pos-pill{display:inline-block;padding:2px 8px;border-radius:6px;font-size:11px;font-weight:700;letter-spacing:.04em}
+.pos-pill.TM{background:rgba(74,222,128,.18);color:#4ADE80}.pos-pill.HV{background:rgba(74,158,255,.18);color:#4A9EFF}
+.pos-pill.TV{background:rgba(251,191,36,.18);color:#FBBF24}.pos-pill.TĐ{background:rgba(248,113,113,.18);color:#F87171}
+.score-tbl{width:100%;border-collapse:separate;border-spacing:0;font-size:13px}
+.score-tbl thead th{font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);padding:8px 5px;font-weight:700;text-align:center;border-bottom:2px solid rgba(255,255,255,.12);position:sticky;top:0;background:var(--card)}
+.score-tbl thead th:first-child{text-align:left}
+.score-tbl tbody td{padding:8px 5px;border-bottom:1px solid var(--line);text-align:center;vertical-align:middle}
+.score-tbl tbody td:first-child{text-align:left}
+.score-tbl tbody tr:hover{background:rgba(255,255,255,.03)}
+.score-tbl .pt-cell{font-family:var(--cond);font-weight:700;font-size:18px;color:var(--accent)}
+.score-tbl .pt-neg{color:var(--bad)}
+.mvp-row{background:rgba(0,217,255,.06)!important}
+.mvp-star{color:#FBBF24;font-size:14px;margin-left:4px}
+.rules-grid{display:grid;grid-template-columns:1fr 1fr;gap:0}
+.rule-item{display:flex;align-items:center;gap:8px;padding:10px 12px;border-bottom:1px solid var(--line)}
+.rule-item:nth-child(odd){border-right:1px solid var(--line)}
+.rule-val{font-family:var(--cond);font-weight:700;font-size:18px;min-width:32px;text-align:center}
+.rule-val.plus{color:var(--ok)}.rule-val.minus{color:var(--bad)}
+.rule-name{font-size:13px;flex:1;min-width:0}
+.rules-section{font-size:11px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.08em;padding:10px 12px 4px;grid-column:1/-1;border-bottom:1px solid var(--line)}
+@media(max-width:500px){.rules-grid{grid-template-columns:1fr}.rule-item{border-right:none!important}}
 .rev{text-decoration:line-through;opacity:.55}
 .tb{color:var(--blue)}.to{color:var(--orange)}
 .dot{width:10px;height:10px;border-radius:50%;display:inline-block}
@@ -260,7 +284,7 @@ const posIn=(ps,id)=>((ps&&ps.pos&&ps.pos[id])||(posOf(id)||[])[0]||"TĐ");
 const goalPt=(c,pos)=>({TM:c.pGoalTM,HV:c.pGoalHV,TV:c.pGoalTV,"TĐ":c.pGoalTD})[pos];
 const ptsOf=(ps,id,c)=>{if(!ps||!(ps.pl||[]).includes(id))return 0;const k=Number((ps.g||{})[id])||0,has=(a)=>(ps[a]||[]).includes(id);return c.pPlay+k*goalPt(c,posIn(ps,id))+(k>=3?c.pHat:0)+(Number((ps.a||{})[id])||0)*c.pAssist+(has("ot")?c.pOnTime:0)+(has("cs")?c.pClean:0)+(has("pp")?c.pPen:0)+(Number((ps.yc||{})[id])||0)*c.pYellow+(Number((ps.rc||{})[id])||0)*c.pRed+(has("pay")?c.pPay:0)+(has("sup")?c.pSup:0)};
 const POSN={TM:"Thủ môn",HV:"Hậu vệ",TV:"Tiền vệ","TĐ":"Tiền đạo"};const posOf=id=>((S.mypos&&S.mypos[id]&&S.mypos[id].pos)||(S.members[id]||{}).pos||[]);
-const DEF_CFG={pPlay:2,pOnTime:1,pGoalTD:1,pGoalTV:2,pGoalHV:3,pGoalTM:5,pHat:2,pAssist:1,pClean:2,pPen:1,pYellow:-1,pRed:-2,pPay:3,pSup:3,fee:0,minPeople:6,teamSize:7,ptsExact:3,ptsResult:1,troll:"light",venues:[],
+const DEF_CFG={pPlay:2,pOnTime:1,pGoalTD:1,pGoalTV:2,pGoalHV:3,pGoalTM:5,pHat:2,pAssist:1,pClean:2,pPen:1,pYellow:-1,pRed:-2,pPay:2,pSup:3,fee:0,minPeople:6,teamSize:7,ptsExact:3,ptsResult:1,troll:"light",venues:[],
  catIn:["Phí sân/trận","Phí thành viên (tháng)","Tài trợ","Phạt"],catOut:["Thuê sân","Nước","Trọng tài","Giải đấu PTTH","Trang phục","Vật dụng","Khác"]};
 
 
@@ -375,7 +399,7 @@ function vWeek(){
   if(!m)return `<div class="card empty"><h3>Chưa có trận nào</h3><p>${S.isAdmin?"Tạo trận đầu tiên để anh em bắt đầu vote.":"Khi admin tạo trận, lịch và nút vote sẽ hiện ở đây."}</p>${S.isAdmin?'<button class="btn pri" data-a="modal" data-v="newMatch">Tạo trận</button>':""}</div>`;
   const back=S.selMatch&&(!nextMatch()||nextMatch().id!==S.selMatch)?`<button class="btn ghost sm" style="align-self:flex-start" data-a="unsel">← Về tuần này</button>`:"";
   return `${posBar}${back?`<div style="margin-bottom:12px">${back}</div>`:""}<div class="cols">
-   <div class="colL">${heroCard(m)}${voteStrip(m)}${truocTran(m)}${doiHinh(m)}${m.status==="finished"?tangCard(m):""}${S.isAdmin?adminCard(m):""}${m.status==="finished"?statTable(m):""}${S.isAdmin&&m.status==="finished"?psCard(m):""}</div>
+   <div class="colL">${heroCard(m)}${voteStrip(m)}${truocTran(m)}${doiHinh(m)}${m.status==="finished"?tangCard(m):""}${S.isAdmin?adminCard(m):""}${m.status==="finished"?statTable(m):""}${rulesCard()}${S.isAdmin&&m.status==="finished"?psCard(m):""}</div>
    <div class="colR">${weekVote()}${voteList(m)}${predCard(m)}</div></div>`;
 }
 function heroCard(m){
@@ -460,21 +484,23 @@ function psIds(m){const t=S.teams[m.id];return t?[...t.blue,...t.orange]:voteGro
 function psCard(m){
   const ps=S.pstats[m.id]||{},ids=psIds(m);if(!ids.length)return "";const c=C();
   const pl=ps.pl||ids,has=(k,id)=>(ps[k]||[]).indexOf(id)>=0;
-  const ck=(k,id,on)=>`<input type="checkbox" id="ps${k}_${id}" ${on?"checked":""}>`;
-  const row=id=>{const pos=posIn(ps,id),unk=!(ps.pos&&ps.pos[id])&&!posOf(id).length;return `<tr><td class="ell" style="min-width:110px">${esc(nm(id))}</td><td>${ck("pl",id,pl.includes(id))}</td><td><select id="pspos_${id}" style="padding:6px;width:auto">${POS.map(x=>`<option value="${x}" ${pos===x?"selected":""}>${POSN[x]}</option>`).join("")}</select>${unk?'<div class="tiny muted">chưa có vị trí</div>':""}</td>
-   <td><input id="psg_${id}" type="number" min="0" inputmode="numeric" value="${(ps.g||{})[id]||0}" style="width:54px;padding:6px"></td><td><input id="psa_${id}" type="number" min="0" inputmode="numeric" value="${(ps.a||{})[id]||0}" style="width:54px;padding:6px"></td>
-   <td>${ck("ot",id,has("ot",id))}</td><td>${ck("cs",id,has("cs",id))}</td><td>${ck("pp",id,has("pp",id))}</td>
-   <td><input id="psy_${id}" type="number" min="0" inputmode="numeric" value="${(ps.yc||{})[id]||0}" style="width:50px;padding:6px"></td><td><input id="psr_${id}" type="number" min="0" inputmode="numeric" value="${(ps.rc||{})[id]||0}" style="width:50px;padding:6px"></td>
-   <td>${ck("pay",id,has("pay",id))}</td><td>${ck("sup",id,has("sup",id))}</td><td class="num"><b id="psout_${id}" style="font-size:17px">${ptsOf(Object.assign({},ps,{pl}),id,c)}</b></td></tr>`};
-  return `<div class="card o8 stack"><div class="lbl">Admin · Bảng thống kê sau trận</div><p class="tiny muted" style="margin:0">Điền xong bấm Lưu, app tự tính điểm cho từng cầu thủ và cập nhật bảng xếp hạng. Cột Điểm trận tự cập nhật khi anh nhập.</p>
-   <div class="scroll-x"><table class="tbl"><tr><th>Cầu thủ</th><th>Ra sân</th><th>Vị trí trận này</th><th>Bàn</th><th>Kiến tạo</th><th>Đúng giờ</th><th>Sạch lưới</th><th>Cản PĐ</th><th>Thẻ vàng</th><th>Thẻ đỏ</th><th>Đóng tiền đầy đủ</th><th>Ủng hộ quỹ đội</th><th>Điểm trận</th></tr>${ids.map(row).join("")}</table></div>
-   <label class="field"><span>MVP trận (chỉ để vinh danh, không cộng điểm)</span><select id="psm"><option value="">— chưa chọn —</option>${ids.map(id=>`<option value="${id}" ${ps.mvp===id?"selected":""}>${esc(nm(id))}</option>`).join("")}</select></label><button class="btn pri" data-a="savePs" data-m="${m.id}">Lưu và tính điểm</button></div>`;
+  const ck=(k,id,on)=>`<input type="checkbox" id="ps${k}_${id}" ${on?"checked":""} style="width:18px;height:18px;accent-color:var(--accent)">`;
+  const row=id=>{const pos=posIn(ps,id),unk=!(ps.pos&&ps.pos[id])&&!posOf(id).length;const gp=goalPt(c,pos);return `<tr><td style="min-width:120px"><div class="ell" style="font-weight:600">${esc(nm(id))}</div></td><td style="text-align:center">${ck("pl",id,pl.includes(id))}</td><td><select id="pspos_${id}" style="padding:5px 8px;width:auto;border-radius:8px;font-size:12px;font-weight:600">${POS.map(x=>`<option value="${x}" ${pos===x?"selected":""}>${POSN[x]}</option>`).join("")}</select>${unk?'<div class="tiny" style="color:var(--warn)">⚠ chưa có vị trí</div>':""}</td>
+   <td><input id="psg_${id}" type="number" min="0" inputmode="numeric" value="${(ps.g||{})[id]||0}" style="width:50px;padding:5px;text-align:center;border-radius:8px"></td><td style="text-align:center;font-size:11px;color:var(--muted)">×${gp}=<b style="color:var(--ok)">${((ps.g||{})[id]||0)*gp}</b></td><td><input id="psa_${id}" type="number" min="0" inputmode="numeric" value="${(ps.a||{})[id]||0}" style="width:50px;padding:5px;text-align:center;border-radius:8px"></td>
+   <td style="text-align:center">${ck("ot",id,has("ot",id))}</td><td style="text-align:center">${ck("cs",id,has("cs",id))}</td><td style="text-align:center">${ck("pp",id,has("pp",id))}</td>
+   <td><input id="psy_${id}" type="number" min="0" inputmode="numeric" value="${(ps.yc||{})[id]||0}" style="width:46px;padding:5px;text-align:center;border-radius:8px"></td><td><input id="psr_${id}" type="number" min="0" inputmode="numeric" value="${(ps.rc||{})[id]||0}" style="width:46px;padding:5px;text-align:center;border-radius:8px"></td>
+   <td style="text-align:center">${ck("pay",id,has("pay",id))}</td><td style="text-align:center">${ck("sup",id,has("sup",id))}</td><td class="pt-cell"><b id="psout_${id}">${ptsOf(Object.assign({},ps,{pl}),id,c)}</b></td></tr>`};
+  return `<div class="card o8 stack"><div class="score-header"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 14l2 2 4-4"/></svg><h3>Admin · Nhập Thống Kê Trận</h3></div>
+   <div style="display:flex;gap:8px;align-items:center;padding:8px 12px;background:rgba(0,217,255,.08);border-radius:12px;border:1px solid rgba(0,217,255,.15)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4m0-4h.01"/></svg><span class="small" style="color:var(--ice)">Điền xong bấm <b>Lưu</b>. Cột <b>Điểm trận</b> tự cập nhật khi anh nhập. Điểm bàn thắng tính theo vị trí: TĐ ×${c.pGoalTD} · TV ×${c.pGoalTV} · HV ×${c.pGoalHV} · TM ×${c.pGoalTM}</span></div>
+   <div class="scroll-x"><table class="score-tbl"><thead><tr><th style="min-width:120px">Cầu thủ</th><th>Ra sân</th><th>Vị trí</th><th>Bàn</th><th>Đ.bàn</th><th>KT</th><th>Đúng giờ</th><th>Sạch lưới</th><th>Cản PĐ</th><th style="color:var(--warn)">Vàng</th><th style="color:var(--bad)">Đỏ</th><th style="color:var(--ok)">Đóng tiền</th><th style="color:var(--ok)">Ủng hộ quỹ</th><th style="color:var(--accent)">Điểm</th></tr></thead><tbody>${ids.map(row).join("")}</tbody></table></div>
+   <label class="field"><span>⭐ MVP trận (vinh danh, không cộng điểm)</span><select id="psm" style="font-weight:600"><option value="">— chưa chọn —</option>${ids.map(id=>`<option value="${id}" ${ps.mvp===id?"selected":""}>${esc(nm(id))}</option>`).join("")}</select></label><button class="btn pri" data-a="savePs" data-m="${m.id}" style="font-size:15px;padding:14px 20px">💾 Lưu và tính điểm</button></div>`;
 }
 function statTable(m){
   const ps=S.pstats[m.id];if(!ps||!ps.pl||!ps.pl.length)return "";const c=C();
   const rows=ps.pl.map(id=>[id,ptsOf(ps,id,c)]).sort((x,y)=>y[1]-x[1]||nm(x[0]).localeCompare(nm(y[0]),"vi"));
-  const yn=(k,id)=>(ps[k]||[]).includes(id)?"✓":"";
-  return `<div class="card stack"><div class="lbl">Thống kê và điểm sau trận</div><div class="scroll-x"><table class="tbl"><tr><th>Cầu thủ</th><th>Vị trí</th><th>Bàn</th><th>KT</th><th>Đúng giờ</th><th>Sạch lưới</th><th>Cản PĐ</th><th>Vàng</th><th>Đỏ</th><th>Đóng tiền</th><th>Ủng hộ quỹ</th><th>Điểm</th></tr>${rows.map(([id,t])=>`<tr><td>${esc(nm(id))}${ps.mvp===id?" ⭐":""}</td><td>${POSN[posIn(ps,id)]||""}</td><td class="num">${(ps.g||{})[id]||0}</td><td class="num">${(ps.a||{})[id]||0}</td><td>${yn("ot",id)}</td><td>${yn("cs",id)}</td><td>${yn("pp",id)}</td><td class="num">${(ps.yc||{})[id]||0}</td><td class="num">${(ps.rc||{})[id]||0}</td><td>${yn("pay",id)}</td><td>${yn("sup",id)}</td><td class="num"><b>${t}</b></td></tr>`).join("")}</table></div></div>`;
+  const yn=(k,id)=>(ps[k]||[]).includes(id)?'<span style="color:var(--ok)">✓</span>':"–";
+  const medals=["🥇","🥈","🥉"];
+  return `<div class="card stack"><div class="score-header">${ICON.shield}<h3>Bảng Thống Kê Trận Đấu</h3></div><div class="scroll-x"><table class="score-tbl"><thead><tr><th style="min-width:130px">Cầu thủ</th><th>Vị trí</th><th>Bàn</th><th>KT</th><th>Đúng giờ</th><th>Sạch lưới</th><th>Cản PĐ</th><th>Vàng</th><th>Đỏ</th><th>Đóng tiền</th><th>Ủng hộ quỹ</th><th>Điểm</th></tr></thead><tbody>${rows.map(([id,t],i)=>{const pos=posIn(ps,id);return `<tr class="${ps.mvp===id?"mvp-row":""}"><td><span class="ell" style="display:inline-flex;align-items:center;gap:6px">${i<3?`<span style="font-size:16px">${medals[i]}</span>`:`<span class="rk">${i+1}</span>`}<b>${esc(nm(id))}</b>${ps.mvp===id?'<span class="mvp-star">⭐ MVP</span>':""}</span></td><td><span class="pos-pill ${pos}">${POSN[pos]||""}</span></td><td class="num" style="font-weight:600">${(ps.g||{})[id]||0}</td><td class="num">${(ps.a||{})[id]||0}</td><td>${yn("ot",id)}</td><td>${yn("cs",id)}</td><td>${yn("pp",id)}</td><td class="num">${(ps.yc||{})[id]||"–"}</td><td class="num">${(ps.rc||{})[id]||"–"}</td><td>${yn("pay",id)}</td><td>${yn("sup",id)}</td><td class="pt-cell">${t}</td></tr>`}).join("")}</tbody></table></div></div>`;
 }
 
 
@@ -546,6 +572,13 @@ function vFb(){
   const list=Object.entries(S.feedback).map(([id,f])=>({id,...f})).sort((a,b)=>String(b.t).localeCompare(String(a.t)));
   return `<div class="card stack"><div class="lbl">Góp ý cải tiến</div><textarea id="fbT" maxlength="600" placeholder="Anh thấy app thiếu gì, khó dùng chỗ nào?"></textarea><button class="btn pri" data-a="fb">Gửi góp ý</button></div>
    ${S.isAdmin?`<div class="card"><div class="lbl" style="margin-bottom:4px">Góp ý đã nhận (${list.length})</div><div class="list">${list.length?list.map(f=>`<div class="li" style="align-items:flex-start"><div class="grow"><div class="tiny muted">${esc(f.who?nm(f.who):"Ẩn danh")} · ${esc(fmtDT(f.t))}</div><div style="overflow-wrap:anywhere">${esc(f.text)}</div></div><button class="btn sm ghost" data-a="delfb" data-v="${f.id}" aria-label="Xóa">✕</button></div>`).join(""):'<div class="empty">Chưa có góp ý nào.</div>'}</div></div>`:""}`;
+}
+function rulesCard(){
+  const c=C(),sg=n=>(n>0?"+":n<0?"−":"")+Math.abs(n);
+  const rules=[["Tham gia trận",c.pPlay,"plus"],["Đúng giờ",c.pOnTime,"plus"],["Bàn — Tiền đạo",c.pGoalTD,"plus"],["Bàn — Tiền vệ",c.pGoalTV,"plus"],["Bàn — Hậu vệ",c.pGoalHV,"plus"],["Bàn — Thủ môn",c.pGoalTM,"plus"],["Hat-trick (thưởng thêm)",c.pHat,"plus"],["Kiến tạo",c.pAssist,"plus"],["Sạch lưới (thủ môn)",c.pClean,"plus"],["Cản phạt đền",c.pPen,"plus"],["Đóng tiền đầy đủ",c.pPay,"plus"],["Ủng hộ quỹ đội",c.pSup,"plus"],["Thẻ vàng",c.pYellow,"minus"],["Thẻ đỏ",c.pRed,"minus"]];
+  return `<div class="card o8 stack"><div class="score-header"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg><h3>Thể Lệ Tính Điểm</h3></div>
+  <div class="rules-grid">${rules.map(([t,v,cls])=>`<div class="rule-item"><span>${t}</span><span class="rule-val ${cls}">${sg(v)}</span></div>`).join("")}</div>
+  <p class="tiny muted" style="margin:8px 0 0">Điểm bàn thắng tính theo vị trí trong trận. Admin điền thống kê sau trận → app tự tính điểm.</p></div>`;
 }
 function posPicker(id){
   const cur=posOf(id);
