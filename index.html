@@ -1,0 +1,899 @@
+<script>/* Google Apps Script bridge: gives the app the same db/user/downloads API it uses on Claude, backed by a Google Sheet. */
+(function(){
+window.__GAS=true;window.__gasRun=(...a)=>run(...a);
+const mem={};const ls={get(k){try{return localStorage.getItem(k)}catch(e){return mem[k]||null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){mem[k]=v}},del(k){try{localStorage.removeItem(k)}catch(e){delete mem[k]}}};
+const API="https://script.google.com/macros/s/AKfycbzi_M2qE3qZtO1X0tNYYDU6AFQKPv5gQwSW6KolcWJq-kmist1klRF27aMtO6Jj94g/exec";
+const run=async(fn,...a)=>{const r=await fetch(API,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({fn:fn,args:a})});const j=await r.json();if(j&&j.error)throw new Error(j.error);return j.r};
+const clone=x=>x===undefined?undefined:JSON.parse(JSON.stringify(x));
+let tok=ls.get("fcnh_tok")||"";let store={},ver=null,pin=ls.get("fcnh_pin")||"",admin=false,subs=[];
+const notify=()=>subs.slice().forEach(f=>{try{f()}catch(e){}});
+const parts=p=>p.split("/");const colOf=p=>parts(p).slice(0,-1).join("/");
+const isLocal=p=>p.indexOf("data/users/")===0;
+async function pull(){const r=await run("snap",pin);store=r.docs||{};window.__codes=r.codes||{};ver=r.ver;admin=!!r.admin;notify();return r}
+function snapDoc(path){const d=store[path];return {id:parts(path).pop(),exists:d!==undefined,data:()=>clone(d)}}
+async function write(op,path,data){
+  const r=await run("wr",pin,op,path,data===undefined?null:data,tok);
+  if(r&&r.error){await pull().catch(()=>{});const e=new Error(r.error);e.code=r.error;throw e}
+}
+function docRef(path){return {id:parts(path).pop(),path,
+ get:async()=>{if(isLocal(path)){const v=ls.get("fcnh_l::"+path);return {id:parts(path).pop(),exists:v!=null,data:()=>v?JSON.parse(v):undefined}}return snapDoc(path)},
+ set:async d=>{if(isLocal(path)){ls.set("fcnh_l::"+path,JSON.stringify(d));return}store[path]=clone(d);notify();await write("set",path,d)},
+ update:async d=>{if(isLocal(path)){return}if(store[path]===undefined){const e=new Error("invalid_argument");e.code="invalid_argument";throw e}
+   const n=Object.assign({},store[path]);for(const k of Object.keys(d)){if(d[k]&&typeof d[k]==="object"&&d[k].__delete__)delete n[k];else n[k]=clone(d[k])}store[path]=n;notify();await write("update",path,d)},
+ delete:async()=>{if(isLocal(path)){ls.del("fcnh_l::"+path);return}delete store[path];notify();await write("delete",path)},
+ onSnapshot:(cb)=>{const f=()=>cb(snapDoc(path));subs.push(f);setTimeout(f,0);return()=>{subs=subs.filter(x=>x!==f)}}}}
+function colRef(path){return {doc:id=>docRef(path+"/"+id),
+ onSnapshot:(cb)=>{const f=()=>{const docs=Object.keys(store).filter(k=>colOf(k)===path).map(snapDoc);cb({docs,size:docs.length})};subs.push(f);setTimeout(f,0);return()=>{subs=subs.filter(x=>x!==f)}}}}
+let uid=ls.get("fcnh_uid");if(!uid){uid="d"+Math.random().toString(36).slice(2)+Date.now().toString(36);ls.set("fcnh_uid",uid)}
+const user={id:async()=>uid,canEdit:async()=>admin,isOwner:async()=>admin,can:async()=>true,me:async()=>({}),
+ login:async p=>{const ok=await run("checkPin",p);if(!ok)return false;pin=p;ls.set("fcnh_pin",p);await pull();return true},
+ logout:async()=>{pin="";ls.del("fcnh_pin");admin=false;await pull()}};
+const downloads={save:async({filename,data})=>{const u=URL.createObjectURL(data),a=document.createElement("a");a.href=u;a.download=filename;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(u);a.remove()},1500)}};
+let db=null;
+async function ensure(){if(db)return db;await pull();db={doc:docRef,collection:colRef};
+  const tick=async()=>{if(document.hidden)return;try{const v=await run("ver");if(v!==ver)await pull()}catch(e){}};
+  setInterval(tick,5000);document.addEventListener("visibilitychange",()=>{if(!document.hidden)tick()});return db}
+window.__memLogin=async(id,code)=>{const r=await run("memLogin",id,String(code).trim());if(r&&r.ok){tok=id+":"+String(code).trim();ls.set("fcnh_tok",tok);return {ok:true}}return r||{ok:false}};
+window.__memOut=()=>{tok="";ls.del("fcnh_tok")};
+window.__tokId=()=>tok.split(":")[0];
+window.__memCheck=async()=>{if(!tok)return false;const i=tok.indexOf(":");try{const r=await run("memLogin",tok.slice(0,i),tok.slice(i+1));return !!(r&&r.ok)}catch(e){return true}};
+window.claude={use:async n=>{
+  if(n==="db"){try{return await ensure()}catch(e){return null}}
+  if(n==="user")return user;
+  if(n==="downloads")return downloads;
+  return null}};
+})();
+</script><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><title>FC Nguyễn Huệ</title><meta name="theme-color" content="#071226"><link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="icon-192.png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="FC Nguyễn Huệ">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: desktop = fixed sidebar + main (two columns: match story left, vote/predict right). Phone = single column with bottom tab bar and a drawer for the rest. Midnight Wolf palette, pitch-line hero. */
+:root{
+  --bg:#070B20; --card:rgba(20,28,66,.74); --soft:rgba(52,66,130,.38); --line:rgba(255,255,255,.08);
+  --ink:#F5F7FF; --muted:#A8B2D8; --accent:#00D9FF; --accent-ink:#04122A; --ice:#7FDBFF;
+  --blue:#4A9EFF; --orange:#FF8C42; --ok:#4ADE80; --warn:#FBBF24; --bad:#F87171;
+  --shadow:0 10px 36px rgba(0,0,0,.45);
+  --sans:"Be Vietnam Pro",system-ui,-apple-system,"Segoe UI",sans-serif; --cond:"Barlow Condensed","Arial Narrow",system-ui,sans-serif;
+  --mono:"Barlow Condensed","Arial Narrow",system-ui,sans-serif;
+  --logo:url("data:image/webp;base64,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"); --noise:url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 .05 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n");
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{min-height:100%}
+body{margin:0;background-color:var(--bg);color:var(--ink);font:400 14px/1.5 var(--sans);position:relative;
+  background-image:var(--noise),radial-gradient(ellipse 70% 40% at 0% 0%,rgba(0,217,255,.20),transparent 62%),radial-gradient(ellipse 60% 50% at 100% 40%,rgba(74,158,255,.14),transparent 65%),radial-gradient(ellipse 80% 40% at 40% 108%,rgba(127,219,255,.12),transparent 62%),linear-gradient(180deg,#0A1030,#070B20);background-attachment:fixed}
+body::before{content:"";position:fixed;right:-14vmin;bottom:-8vmin;width:70vmin;height:76vmin;background:var(--logo) center/contain no-repeat;opacity:.05;pointer-events:none;z-index:0}
+#app{position:relative;z-index:1;min-width:0}
+h1,h2,h3{margin:0;text-wrap:balance}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer;border:0;background:none}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.num{font-family:var(--cond);font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:.01em}
+.cond{font-family:var(--cond);font-weight:700;letter-spacing:.01em}
+
+/* shell */
+.side{position:fixed;left:0;top:0;bottom:0;width:250px;padding:14px 12px 16px;display:none;flex-direction:column;gap:6px;background:rgba(7,11,32,.82);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);border-right:1px solid var(--line);overflow-y:auto;z-index:30}
+.brandrow{display:flex;align-items:center;gap:10px;padding:2px 4px 10px;font-weight:800;font-size:17px}
+.mark{width:40px;height:40px;flex:none;background:var(--logo) center/contain no-repeat;filter:drop-shadow(0 0 8px rgba(0,217,255,.35))}
+.me-card{display:flex;align-items:center;gap:10px;width:100%;text-align:left;padding:11px 12px;border-radius:16px;background:linear-gradient(135deg,#0A8FB0,#0A6A8C);color:#fff;margin-bottom:10px}
+.me-card .t{font-weight:700;line-height:1.2}.me-card .s{font-size:12px;opacity:.85;line-height:1.3}
+.me-av{width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-weight:700;flex:none}
+.grp{font-size:11px;font-weight:700;color:var(--muted);padding:12px 8px 4px}
+.ni{display:flex;align-items:center;gap:12px;width:100%;padding:10px 12px;border-radius:14px;color:var(--muted);font-weight:600;font-size:15px;text-align:left}
+.ni svg{width:20px;height:20px;flex:none}
+.ni:hover{background:rgba(255,255,255,.05);color:var(--ink)}
+.ni.on{background:rgba(0,217,255,.14);color:var(--accent)}
+.side .foot{margin-top:auto;padding:12px 8px 0;font-size:12px;color:var(--muted);line-height:1.5}
+.side .foot b{color:var(--accent);display:block;font-size:12px}
+.scrim{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:29}
+.side.open{display:flex}
+.main{padding:14px 16px 118px;max-width:1240px;margin:0 auto}
+.head{display:flex;align-items:flex-start;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+.head .tt{flex:1;min-width:0}
+.head h1{font-family:var(--cond);font-weight:800;font-size:38px;line-height:1;letter-spacing:.01em}
+.head .sub{color:var(--muted);font-size:13px;margin-top:4px}
+.hbtns{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.chip2{display:inline-flex;align-items:center;gap:8px;padding:9px 14px;border-radius:999px;background:rgba(20,28,66,.8);border:1px solid var(--line);font-weight:600;font-size:13px}
+.chip2 .num{font-size:22px;line-height:1;color:var(--accent)}
+.burger{display:inline-flex;width:40px;height:40px;border-radius:12px;align-items:center;justify-content:center;background:var(--soft)}
+.nav{position:fixed;left:0;right:0;bottom:0;padding:8px 12px calc(10px + env(safe-area-inset-bottom,0px));z-index:20;pointer-events:none}
+.nav ul{pointer-events:auto;list-style:none;margin:0 auto;padding:6px;display:flex;justify-content:space-around;max-width:520px;background:rgba(14,20,52,.88);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);border:1px solid var(--line);border-radius:26px;box-shadow:var(--shadow)}
+.nav button{display:flex;flex-direction:column;align-items:center;gap:2px;padding:7px 10px;border-radius:18px;color:var(--muted);font-size:11px;font-weight:600;min-width:56px}
+.nav button.on{color:var(--accent)} .nav svg{width:22px;height:22px}
+.fab{position:fixed;right:16px;bottom:calc(88px + env(safe-area-inset-bottom,0px));z-index:19;width:52px;height:52px;border-radius:50%;background:var(--accent);color:var(--accent-ink);box-shadow:var(--shadow);display:flex;align-items:center;justify-content:center}
+.fab svg{width:24px;height:24px}
+@media(min-width:900px){
+  .side{display:flex}.nav,.burger,.scrim{display:none!important}
+  .main{margin-left:250px;max-width:none;padding:22px 28px 60px}
+  .main>.wrap{max-width:1240px;margin:0 auto}
+  .fab{bottom:24px;right:24px}
+}
+
+/* cards & controls */
+.card{background:var(--card);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border:1px solid var(--line);border-radius:20px;padding:18px;box-shadow:var(--shadow);min-width:0}
+.stack{display:flex;flex-direction:column;gap:14px;min-width:0}
+.row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.sp{flex:1}
+.muted{color:var(--muted)}.small{font-size:12px}.tiny{font-size:11px}
+.lbl{font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);font-weight:700}
+.sec{font-family:var(--cond);font-weight:800;font-size:26px;line-height:1.1}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:11px 16px;border-radius:14px;font-weight:600;background:var(--soft);color:var(--ink);transition:transform .08s,opacity .15s}
+.btn:active{transform:scale(.97)}.btn[disabled]{opacity:.45;cursor:not-allowed}
+.btn.pri{background:var(--accent);color:var(--accent-ink)}
+.btn.warn{background:var(--warn);color:#1b1400}
+.btn.ghost{background:rgba(255,255,255,.04);border:1px solid var(--line)}
+.btn.bad{background:transparent;color:var(--bad);border:1px solid var(--line)}
+.btn.sm{padding:7px 12px;border-radius:11px;font-size:12px}
+.btn.block{width:100%}
+.chip{display:inline-flex;align-items:center;gap:6px;padding:5px 11px;border-radius:999px;background:var(--soft);font-size:13px}
+.pill{display:inline-block;padding:2px 9px;border-radius:999px;font-size:11px;font-weight:700;background:var(--soft);color:var(--muted)}
+.pill.ok{background:rgba(74,222,128,.18);color:var(--ok)}.pill.warn{background:rgba(251,191,36,.2);color:var(--warn)}
+.pill.bad{background:rgba(248,113,113,.18);color:var(--bad)}.pill.acc{background:rgba(0,217,255,.18);color:var(--accent)}
+.tabs{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none}.tabs::-webkit-scrollbar{display:none}
+.tab{white-space:nowrap;padding:8px 14px;border-radius:999px;font-weight:600;font-size:13px;color:var(--muted);background:var(--soft)}
+.tab.on{background:var(--accent);color:var(--accent-ink)}
+.tab i{font-style:normal;opacity:.75;margin-left:4px}
+.field{display:flex;flex-direction:column;gap:5px;min-width:0}.field>span{font-size:12px;color:var(--muted);font-weight:600}
+input[type=text],input[type=number],input[type=tel],input[type=datetime-local],input[type=month],select,textarea{width:100%;background:rgba(52,66,130,.35);border:1px solid transparent;border-radius:13px;padding:11px 13px;min-width:0}
+input:focus,select:focus,textarea:focus{border-color:var(--accent);outline:none}
+select option{background:#141C42;color:var(--ink)}
+textarea{resize:vertical;min-height:84px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media(max-width:380px){.grid2{grid-template-columns:1fr}}
+.list{display:flex;flex-direction:column}
+.li{display:flex;align-items:center;gap:10px;padding:11px 0;border-top:1px solid var(--line);min-width:0}.li:first-child{border-top:0}
+.li>.grow{flex:1;min-width:0}.ell{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.av{flex:none;width:36px;height:36px;border-radius:50%;background:var(--soft);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;color:var(--ice)}
+.av.n{font-family:var(--cond);font-size:16px}
+.empty{text-align:center;padding:26px 12px;color:var(--muted)}.empty h3{color:var(--ink);margin-bottom:6px;font-size:16px}
+.toast{position:fixed;left:50%;bottom:calc(96px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:#0A0E27;padding:10px 16px;border-radius:14px;font-weight:600;z-index:60;max-width:calc(100% - 32px)}
+@media(min-width:900px){.toast{bottom:28px}}
+.tbl{width:100%;border-collapse:collapse;font-size:13px}
+.tbl th{font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);text-align:right;padding:6px;font-weight:700}
+.tbl td{padding:9px 6px;border-top:1px solid var(--line);text-align:right}.tbl th:first-child,.tbl td:first-child{text-align:left}
+.scroll-x{overflow-x:auto}
+.rk{width:26px;height:26px;border-radius:50%;background:var(--soft);display:inline-flex;align-items:center;justify-content:center;font-family:var(--cond);font-size:15px;font-weight:700;flex:none}.rk.g1{background:var(--accent);color:var(--accent-ink)}
+.rev{text-decoration:line-through;opacity:.55}
+.tb{color:var(--blue)}.to{color:var(--orange)}
+.dot{width:10px;height:10px;border-radius:50%;display:inline-block}
+.bar2{height:26px;border-radius:99px;overflow:hidden;display:flex;background:var(--soft)}
+.bar2 i{display:flex;align-items:center;justify-content:center;font-style:normal;font-size:12px;font-weight:700;color:#fff;white-space:nowrap;min-width:0}
+.sheet{position:fixed;inset:0;z-index:50;background-color:var(--bg);background-image:var(--noise),radial-gradient(ellipse 80% 40% at 0% 0%,rgba(0,217,255,.18),transparent 62%),linear-gradient(180deg,#0A1030,#070B20);overflow-y:auto;padding:0 16px calc(40px + env(safe-area-inset-bottom,0px))}
+.sheet>.in{max-width:560px;margin:0 auto}
+.sheet .bar{display:flex;align-items:center;gap:10px;padding-block:14px;position:sticky;top:0;background:linear-gradient(rgba(7,11,32,.95) 70%,transparent);z-index:2}
+.bubble{padding:10px 13px;border-radius:16px;max-width:88%;white-space:pre-wrap;overflow-wrap:anywhere}
+.bubble.u{align-self:flex-end;background:var(--accent);color:var(--accent-ink);border-bottom-right-radius:5px}
+.bubble.b{align-self:flex-start;background:var(--soft);border-bottom-left-radius:5px}
+
+/* match page */
+.cols{display:grid;grid-template-columns:minmax(0,1fr);gap:16px}
+.colL,.colR{display:contents}
+.o0{order:0}.o1{order:1}.o2{order:2}.o3{order:3}.o4{order:4}.o5{order:5}.o6{order:6}.o7{order:7}.o8{order:8}
+@media(min-width:1100px){
+  .cols{grid-template-columns:minmax(0,1fr) 400px;align-items:start}
+  .colL,.colR{display:flex;flex-direction:column;gap:16px;min-width:0}
+}
+.notice{display:flex;align-items:center;gap:12px;padding:12px 16px;border-radius:16px;background:var(--warn);color:#2a1d00;margin-bottom:16px}
+.notice b{display:block;line-height:1.3}.notice span{font-size:12px;opacity:.75}
+.hero2{position:relative;overflow:hidden;border-radius:22px;border:3px solid rgba(127,219,255,.85);padding:20px 22px;color:#fff;box-shadow:var(--shadow),0 0 0 1px rgba(0,217,255,.25),0 0 40px rgba(0,217,255,.12);
+  background:repeating-linear-gradient(90deg,rgba(255,255,255,.035) 0 64px,transparent 64px 128px),linear-gradient(135deg,#0C3A63 0%,#0A2A55 55%,#0A2147 100%)}
+.hero2 .pl,.hero2 .pc,.hero2 .pb{position:absolute;border:3px solid rgba(127,219,255,.32);pointer-events:none}
+.hero2 .pc{width:330px;height:330px;border-radius:50%;right:-60px;top:-16px}
+.hero2 .pl{width:0;right:105px;top:0;bottom:0;border-width:0 0 0 3px}
+.hero2 .pb{left:-3px;top:-3px;width:170px;height:150px;border-width:0 3px 3px 0}
+.hero2 .wm{position:absolute;right:30px;top:20px;width:130px;height:140px;background:var(--logo) center/contain no-repeat;opacity:.16;pointer-events:none}
+.hero2>*{position:relative}
+.hero2 .pill{background:rgba(255,255,255,.92);color:#0A1F44}
+.hrow{display:flex;justify-content:space-between;align-items:flex-end;gap:14px;margin-top:10px}
+.hday{font-size:12px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;opacity:.85}
+.hdate{font-family:var(--cond);font-weight:800;font-size:clamp(64px,13vw,104px);line-height:.88}
+.htime{font-family:var(--cond);font-weight:800;font-size:clamp(34px,6vw,52px);line-height:1;text-align:right}
+.hven{font-size:13px;opacity:.85;text-align:right}
+.hbox{margin-top:14px;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 16px;border:1.5px solid rgba(255,255,255,.55);border-radius:14px;background:rgba(5,15,40,.45)}
+.hbox .l{font-size:13px;line-height:1.35}.hbox .l small{display:block;opacity:.7;font-size:12px}
+.hbox .t{font-family:var(--cond);font-weight:800;font-size:clamp(34px,6.5vw,52px);line-height:1;color:var(--warn)}
+.hbox .sc{font-family:var(--cond);font-weight:800;font-size:clamp(40px,8vw,60px);line-height:1;display:flex;gap:14px;align-items:center;width:100%;justify-content:center}
+.hcount{display:flex;align-items:baseline;gap:8px;margin-top:14px;flex-wrap:wrap}
+.hcount b{font-family:var(--cond);font-weight:800;font-size:56px;line-height:1}
+.hcount em{font-style:normal;font-family:var(--cond);font-weight:700;font-size:24px;opacity:.55}
+.segs{display:grid;gap:6px;margin-top:8px;grid-template-columns:repeat(var(--n),1fr)}
+.segs i{height:6px;border-radius:99px;background:rgba(255,255,255,.18)}
+.segs i.f{background:#fff}.segs i.x{background:var(--warn)}
+.hleg{display:flex;gap:16px;margin-top:10px;font-size:12px;flex-wrap:wrap}
+.hleg span::before{content:"";display:inline-block;width:7px;height:7px;border-radius:2px;margin-right:6px;background:currentColor;opacity:.9}
+.vstrip{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.vstrip .ic{width:40px;height:40px;border-radius:12px;background:var(--soft);display:flex;align-items:center;justify-content:center;flex:none}
+.pchips{display:flex;flex-wrap:wrap;gap:8px}
+.pchip{display:inline-flex;align-items:center;gap:8px;padding:5px 12px 5px 5px;border-radius:999px;background:rgba(52,66,130,.4);font-weight:600;font-size:13px}
+.pchip.me{outline:1.5px solid var(--accent)}
+.pchip .a2{width:26px;height:26px;border-radius:50%;background:rgba(0,217,255,.18);color:var(--ice);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800}
+.hlv{font-size:10px;font-weight:800;color:var(--warn);background:rgba(251,191,36,.15);border-radius:6px;padding:1px 6px}
+.pred{display:flex;align-items:center;justify-content:center;gap:12px}
+.pred label{display:flex;flex-direction:column;align-items:center;gap:6px;font-weight:700;font-size:13px}
+.pred input{width:84px;height:84px;text-align:center;font-family:var(--cond);font-weight:800;font-size:46px;border-radius:18px;padding:0;background:rgba(7,11,32,.55);border:1px solid var(--line)}
+.pred .co{font-family:var(--cond);font-weight:800;font-size:36px;color:var(--muted);margin-top:22px}
+.ai{border-color:rgba(251,191,36,.35);background:linear-gradient(180deg,rgba(80,56,10,.35),rgba(20,28,66,.74))}
+.teams2{display:grid;grid-template-columns:minmax(0,1fr);gap:14px}
+@media(min-width:700px){.teams2{grid-template-columns:1fr 1fr}}
+.gal{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.gal a,.gal div.ph{display:block;aspect-ratio:1;border-radius:14px;overflow:hidden;background:var(--soft)}
+.gal img{width:100%;height:100%;object-fit:cover;display:block}
+.stat4{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px}
+.stat4 .s{background:rgba(52,66,130,.3);border-radius:16px;padding:14px}
+.stat4 .s b{display:block;font-family:var(--cond);font-weight:800;font-size:38px;line-height:1;color:var(--ice)}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<div id="app"><div style="display:flex;flex-direction:column;align-items:center;gap:10px;padding-top:24vh;color:#A8B2D8;font-size:12px;letter-spacing:.14em">ĐANG TẢI…</div></div>
+
+<script>
+(function(){
+"use strict";
+/* ---------- helpers ---------- */
+const $app=document.getElementById("app");
+const esc=s=>String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const TZ=7*3600e3, pad=n=>String(n).padStart(2,"0");
+const WD=["Chủ nhật","Thứ 2","Thứ 3","Thứ 4","Thứ 5","Thứ 6","Thứ 7"];
+const bk=iso=>new Date(new Date(iso).getTime()+TZ);
+const fmtDT=iso=>{const d=bk(iso);return WD[d.getUTCDay()]+", "+pad(d.getUTCDate())+"/"+pad(d.getUTCMonth()+1)+" · "+pad(d.getUTCHours())+":"+pad(d.getUTCMinutes())};
+const fmtD=iso=>{const d=bk(iso);return pad(d.getUTCDate())+"/"+pad(d.getUTCMonth()+1)+"/"+d.getUTCFullYear()};
+const monthKey=iso=>{const d=bk(iso);return d.getUTCFullYear()+"-"+pad(d.getUTCMonth()+1)};
+const quarterKey=iso=>{const d=bk(iso);return d.getUTCFullYear()+"-Q"+(Math.floor(d.getUTCMonth()/3)+1)};
+const fromLocal=v=>{if(!v)return null;const[a,b]=v.split("T");const[y,m,d]=a.split("-").map(Number);const[h,mi]=(b||"00:00").split(":").map(Number);return new Date(Date.UTC(y,m-1,d,h,mi)-TZ).toISOString()};
+const toLocalInput=iso=>{const d=bk(iso);return d.getUTCFullYear()+"-"+pad(d.getUTCMonth()+1)+"-"+pad(d.getUTCDate())+"T"+pad(d.getUTCHours())+":"+pad(d.getUTCMinutes())};
+const vnd=n=>(Math.round(n)).toLocaleString("vi-VN")+"đ";
+const parseMoney=s=>{s=String(s||"").toLowerCase().replace(/[.,\s]/g,"");let m=1;if(/tr$/.test(s)){m=1e6;s=s.slice(0,-2)}else if(/k$/.test(s)){m=1e3;s=s.slice(0,-1)}const n=Number(s);return isFinite(n)&&n>0?Math.round(n*m):0};
+const initials=n=>String(n||"?").trim().split(/\s+/).slice(-1)[0].slice(0,2).toUpperCase();
+const uid8=()=>Math.random().toString(36).slice(2,10);
+const ICON={
+ home:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>',
+ trophy:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0zM17 5h3v2a3 3 0 0 1-3 3M7 5H4v2a3 3 0 0 0 3 3"/></svg>',
+ wallet:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h13v4"/><path d="M3 7v11a2 2 0 0 0 2 2h14a1 1 0 0 0 1-1v-9a1 1 0 0 0-1-1H5a2 2 0 0 1-2-2"/><circle cx="16.5" cy="14.5" r="1" fill="currentColor"/></svg>',
+ user:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>',
+ cog:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 0 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 0 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 0 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 0 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>',
+ chat:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/></svg>',
+ back:'<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>',
+ shield:'<svg width="30" height="30" viewBox="0 0 32 32"><path d="M16 2l11 4v9c0 7-5 12-11 15C10 27 5 22 5 15V6z" fill="none" stroke="var(--accent)" stroke-width="1.8"/><circle cx="16" cy="15" r="5" fill="none" stroke="var(--ice)" stroke-width="1.6"/><path d="M16 10v3m4.7-.5l-2.4 1.8m.9 3.7l-2.7-1.2-2.7 1.2m-.1-3.7L11.3 12.5" stroke="var(--ice)" stroke-width="1.2" fill="none"/></svg>'
+};
+const POS=["TM","HV","TV","TĐ"];const POSN={TM:"Thủ môn",HV:"Hậu vệ",TV:"Tiền vệ","TĐ":"Tiền đạo"};const posOf=id=>((S.mypos&&S.mypos[id]&&S.mypos[id].pos)||(S.members[id]||{}).pos||[]);
+const DEF_CFG={ptsPlay:1,ptsGoal:1,ptsAssist:.5,ptsMvp:3,fee:0,minPeople:6,teamSize:7,ptsExact:3,ptsResult:1,troll:"light",venues:[],
+ catIn:["Phí sân/trận","Phí thành viên (tháng)","Tài trợ","Phạt"],catOut:["Thuê sân","Nước","Trọng tài","Giải đấu PTTH","Trang phục","Vật dụng","Khác"]};
+
+
+/* ---------- state ---------- */
+const S={db:null,user:null,sample:null,assets:null,downloads:null,uid:null,isAdmin:false,canWrite:null,
+ members:{},matches:{},votes:{},pred:{},comments:{},teams:{},fund:{},rvotes:{},rounds:{},ratings:{},analysis:{},prefs:{},media:{},feedback:{},pstats:{},mypos:{},cfg:{},
+ meId:null,page:"week",selMatch:null,vtab:"play",truoc:"ai",hv:null,tn:2,drawer:false,sheet:null,modal:null,bxhTab:"tot",bxhPeriod:"quarter",fundMonth:"all",mediaMatch:"",chat:[],chatBusy:false,toast:"",loaded:false};
+const C=()=>Object.assign({},DEF_CFG,S.cfg||{});
+/* ---------- derived ---------- */
+const mem=id=>S.members[id];
+const nm=id=>{const m=mem(id);return m?(m.nick||m.name):"?"};
+const activeMembers=()=>Object.entries(S.members).filter(([,m])=>m.active!==false).map(([id,m])=>({id,...m})).sort((a,b)=>nm(a.id).localeCompare(nm(b.id),"vi"));
+const matchList=()=>Object.entries(S.matches).map(([id,m])=>({id,...m})).sort((a,b)=>new Date(a.kickoff)-new Date(b.kickoff));
+const nextMatch=()=>matchList().find(m=>m.status==="open");
+const finishedMatches=()=>matchList().filter(m=>m.status==="finished").reverse();
+const voteLocked=m=>!m||m.status!=="open"||Date.now()>new Date(m.deadline).getTime();
+const voteOf=(mid,id)=>S.votes[mid+"__"+id];
+function voteGroups(mid){const g={play:[],cheer:[],rest:[],pending:[]};for(const m of activeMembers()){const v=voteOf(mid,m.id);if(v)g[v.s].push(m.id);else if(!m.cheer)g.pending.push(m.id)}return g}
+const myTeam=(mid)=>{const t=S.teams[mid];if(!t||!S.meId)return null;return t.blue.includes(S.meId)?"blue":t.orange.includes(S.meId)?"orange":null};
+function outcome(b,o){return b>o?"B":b<o?"O":"D"}
+function predPoints(m,p){if(m.status!=="finished"||m.sb==null)return null;const c=C();if(p.b===m.sb&&p.o===m.so)return c.ptsExact;if(outcome(p.b,p.o)===outcome(m.sb,m.so))return c.ptsResult;return 0}
+const inPeriod=(iso,per)=>{if(per==="all")return true;const n=new Date().toISOString();return per==="quarter"?quarterKey(iso)===quarterKey(n):bk(iso).getUTCFullYear()===bk(n).getUTCFullYear()};
+const bal=(list)=>list.reduce((s,t)=>s+(t.type==="in"?1:-1)*t.amount,0);
+const fundList=()=>Object.entries(S.fund).map(([id,t])=>({id,...t})).sort((a,b)=>new Date(a.date)-new Date(b.date)||String(a.created||"").localeCompare(String(b.created||"")));
+const teamSizeLabel=n=>({5:"1-2-2",7:"1-2-3-1",9:"1-3-3-2",11:"1-4-4-2"}[n]||"");
+
+
+const curMatch=()=>(S.selMatch&&S.matches[S.selMatch]?{id:S.selMatch,...S.matches[S.selMatch]}:null)||nextMatch()||finishedMatches()[0]||null;
+/* ---------- db writes ---------- */
+const col=n=>S.db.collection(n);
+async function save(path,data,merge){try{const r=S.db.doc(path);if(merge)await r.update(data);else await r.set(data);return true}catch(e){toast(e&&e.code==="invalid_argument"?"Anh chưa có quyền ghi mục này":"Chưa lưu được, thử lại nhé");return false}}
+async function del(path){try{await S.db.doc(path).delete();return true}catch(e){toast("Chưa xóa được");return false}}
+let toastT;function toast(t){S.toast=t;render();clearTimeout(toastT);toastT=setTimeout(()=>{S.toast="";render()},2600)}
+
+
+/* ---------- render engine (keeps typed text) ---------- */
+let raf=0;function render(){if(raf)return;raf=requestAnimationFrame(()=>{raf=0;paint()})}
+function paint(){
+  const keep={};let focusId=null,selS=null,selE=null,sy=null,wy=window.scrollY;
+  $app.querySelectorAll("input:not([type=file]),select,textarea").forEach(el=>{if(!el.id)return;keep[el.id]=el.type==="checkbox"?el.checked:el.value});
+  const ae=document.activeElement;if(ae&&ae.id&&$app.contains(ae)){focusId=ae.id;try{selS=ae.selectionStart;selE=ae.selectionEnd}catch(e){}}
+  const sh=$app.querySelector(".sheet");sy=sh?sh.scrollTop:null;
+  $app.innerHTML=S.loaded?view():'<div style="display:flex;justify-content:center;padding-top:24vh;color:#A8B2D8;font-size:12px;letter-spacing:.14em">ĐANG TẢI…</div>';
+  $app.querySelectorAll("input:not([type=file]),select,textarea").forEach(el=>{if(el.id&&keep[el.id]!==undefined){if(el.type==="checkbox")el.checked=keep[el.id];else if(el.tagName==="SELECT"){if([...el.options].some(o=>o.value===keep[el.id]))el.value=keep[el.id]}else el.value=keep[el.id]}});
+  const sh2=$app.querySelector(".sheet");if(sh2&&sy!=null)sh2.scrollTop=sy;
+  if(wy&&Math.abs(window.scrollY-wy)>2)window.scrollTo(0,wy);
+  if(focusId){const el=document.getElementById(focusId);if(el){el.focus({preventScroll:true});try{if(selS!=null)el.setSelectionRange(selS,selE)}catch(e){}}}
+  tickCd();
+}
+function tickCd(){document.querySelectorAll("[data-cd]").forEach(el=>{let s=Math.max(0,Math.floor((new Date(el.dataset.cd)-Date.now())/1000));const d=Math.floor(s/86400);s%=86400;el.textContent=(d?d+" ngày ":"")+pad(Math.floor(s/3600))+":"+pad(Math.floor(s%3600/60))+":"+pad(s%60)})}
+setInterval(tickCd,1000);
+
+/* ---------- shell ---------- */
+const NAV=[["Đội bóng",[["week","Tuần này","home"],["bxh","Xếp hạng","trophy"],["hist","Lịch sử","clock"],["memo","Kỷ niệm","image"],["quy","Quỹ","wallet"]]],
+ ["Giải trí",[["play","Sân chơi","game"],["season","Tổng kết mùa","gift"]]],
+ ["Tài khoản",[["me","Cá nhân","user"],["fb","Góp ý","bulb"]]]];
+const ICO2={
+ clock:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>',
+ image:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="1.6"/><path d="M21 16l-5-5-8 8"/></svg>',
+ game:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 11h4M8 9v4M15 12h.01M18 10h.01"/><path d="M17.3 5H6.7a4 4 0 0 0-3.9 3.1L1.6 15a2.7 2.7 0 0 0 4.7 2L8 15h8l1.7 2a2.7 2.7 0 0 0 4.7-2l-1.2-6.9A4 4 0 0 0 17.3 5z"/></svg>',
+ gift:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="8" width="18" height="4"/><path d="M12 8v13M19 12v9H5v-9M7.5 8a2.5 2.5 0 1 1 0-5C11 3 12 8 12 8s1-5 4.5-5a2.5 2.5 0 1 1 0 5"/></svg>',
+ bulb:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6M10 22h4M12 2a7 7 0 0 0-4 12.7c.6.5 1 1.3 1 2.3h6c0-1 .4-1.8 1-2.3A7 7 0 0 0 12 2z"/></svg>',
+ menu:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>'};
+const ic=n=>ICON[n]||ICO2[n]||"";
+const TITLES={week:"Tuần này",bxh:"Xếp hạng",hist:"Lịch sử",memo:"Kỷ niệm",quy:"Quỹ",play:"Sân chơi",season:"Tổng kết mùa",me:"Cá nhân",fb:"Góp ý",admin:"Quản trị"};
+function sidebar(){
+  const m=S.meId?mem(S.meId):null,nx=nextMatch();
+  const groups=NAV.map(([g,items])=>`<div class="grp">${g}</div>${items.map(([k,l,i])=>`<button class="ni ${S.page===k?"on":""}" data-a="page" data-v="${k}">${ic(i)}${l}</button>`).join("")}`).join("")
+    +(S.isAdmin?`<div class="grp">Quản trị</div><button class="ni ${S.page==="admin"?"on":""}" data-a="page" data-v="admin">${ic("cog")}Quản trị</button>`:"");
+  return `<aside class="side ${S.drawer?"open":""}"><div class="brandrow"><span class="mark"></span>FC Nguyễn Huệ</div>
+   <button class="me-card" data-a="modal" data-v="iam"><span class="me-av">${m?esc(initials(nm(S.meId))):ic("user")}</span><span style="min-width:0"><div class="t ell">${m?esc(nm(S.meId)):"Chọn tên của bạn"}</div><div class="s">${m?(S.isAdmin?"Quản trị viên · bấm để đổi":"Bấm để đổi người"):"Để vote và xem thành tích"}</div></span></button>
+   ${groups}
+   <div class="foot"><b>Trận tới</b>${nx?esc(fmtDT(nx.kickoff))+"<br>"+esc(nx.venue):"Chưa có lịch"}</div></aside>${S.drawer?'<div class="scrim" data-a="drawer"></div>':""}`;
+}
+function topHead(){
+  const m=curMatch(),nx=nextMatch();let sub="";
+  const today=fmtDT(new Date().toISOString()).split(" · ")[0]+"/"+bk(new Date().toISOString()).getUTCFullYear();
+  if(S.page==="week"){
+    if(m){const g=voteGroups(m.id),slots=(m.teamSize||C().teamSize)*2;sub=`${today.replace(/^(.*?), (\d\d\/\d\d)\/(\d{4})$/,"$1, $2/$3")} · trận ${esc(fmtDT(m.kickoff).split(" · ")[0].replace(", "," "))} đã có ${g.play.length}/${slots} người đá`}
+    else sub=today;
+  }
+  const title=S.page==="week"&&S.selMatch&&(!nx||nx.id!==S.selMatch)?"Trận "+(S.matches[S.selMatch]?fmtD(S.matches[S.selMatch].kickoff).slice(0,5):""):TITLES[S.page]||"";
+  const meBtn=S.meId?`<button class="chip2" data-a="modal" data-v="iam"><span class="av" style="width:26px;height:26px;font-size:11px">${esc(initials(nm(S.meId)))}</span>${esc(nm(S.meId))}</button>`:`<button class="btn pri sm" data-a="modal" data-v="iam" style="padding:10px 16px">Chọn tên</button>`;
+  return `<div class="head"><button class="burger" data-a="drawer" aria-label="Menu">${ICO2.menu}</button><div class="tt"><h1>${esc(title)}</h1>${sub?`<div class="sub">${sub}</div>`:""}</div>
+   <div class="hbtns">${isApp()?"":`<button class="btn sm pri" data-a="modal" data-v="inst" style="padding:10px 14px">⬇ Cài app</button>`}${nx&&nx.status==="open"&&Date.now()<new Date(nx.kickoff)?`<span class="chip2">Bóng lăn <span class="num" data-cd="${esc(nx.kickoff)}">--:--:--</span></span>`:""}${meBtn}</div></div>`;
+}
+function view(){
+  let body="";
+  const p=S.page;
+  if(p==="week")body=vWeek();else if(p==="bxh")body=vBxh();else if(p==="quy")body=vQuy();else if(p==="me")body=vMe();else if(p==="admin")body=vAdmin();
+  else if(p==="hist")body=vHist();else if(p==="memo")body=vMemo();else if(p==="play")body=vPlay();else if(p==="season")body=vSeason();else if(p==="fb")body=vFb();
+  const bn=[["week","Tuần này","home"],["bxh","Xếp hạng","trophy"],["quy","Quỹ","wallet"],["me","Cá nhân","user"]];
+  return `${sidebar()}<div class="main"><div class="wrap">${topHead()}${p==="week"?noticeBar():""}${body}</div></div>
+  <nav class="nav"><ul>${bn.map(t=>`<li><button data-a="page" data-v="${t[0]}" class="${S.page===t[0]?"on":""}">${ic(t[2])}${t[1]}</button></li>`).join("")}<li><button data-a="drawer">${ICO2.menu}Thêm</button></li></ul></nav>
+  ${S.sample?`<button class="fab" data-a="chat" aria-label="Hỏi ChuyênBot">${ICON.chat}</button>`:""}
+  ${S.sheet?vChat():""}${S.modal?vModal():""}${S.toast?`<div class="toast" role="status">${esc(S.toast)}</div>`:""}`;
+}
+function noticeBar(){const n=S.cfg&&S.cfg.notice;if(!n||!n.text)return "";return `<div class="notice"><span class="me-av" style="background:rgba(0,0,0,.12)">!</span><div><b>${esc(n.text)}</b><span>${esc(n.by||"Admin")}${n.t?" · "+esc(fmtDT(n.t)):""}</span></div></div>`}
+
+/* ---------- Tuần này ---------- */
+function weekVote(cur){
+  const l=matchList().filter(m=>m.status==="open"&&new Date(m.kickoff)>Date.now()).sort((a,b)=>String(a.kickoff).localeCompare(String(b.kickoff)));
+  if(l.length<1)return "";
+  const ro=S.canWrite===false;
+  return `<div class="o0 stack" style="gap:10px"><div class="sec">Vote các trận sắp tới</div><div class="card"><div class="list">${l.map(m=>{const g=voteGroups(m.id),mv=S.meId?voteOf(m.id,S.meId):null,lk=voteLocked(m),slots=(m.teamSize||C().teamSize)*2;
+    return `<div class="li" style="flex-wrap:wrap;align-items:flex-start"><button style="text-align:left;flex:1;min-width:150px" data-a="sel" data-v="${m.id}"><div class="ell" style="font-weight:700">${esc(fmtDT(m.kickoff))}</div><div class="tiny muted ell">${esc(m.venue)} · ${g.play.length}/${slots} đá · ${g.cheer.length} cổ vũ · ${g.rest.length} nghỉ · ${g.pending.length} chưa vote</div></button>
+     ${lk?`<span class="pill">${mv?(mv.s==="play"?"Đã đá":mv.s==="cheer"?"Cổ vũ":"Đã nghỉ"):"Đã khóa"}</span>`:S.meId?`<div class="row" style="gap:6px;flex-wrap:nowrap"><button class="btn sm ${mv&&mv.s==="play"?"pri":""}" data-a="vote" data-v="play" data-m="${m.id}" ${ro?"disabled":""}>Đá</button><button class="btn sm ${mv&&mv.s==="cheer"?"pri":""}" data-a="vote" data-v="cheer" data-m="${m.id}" ${ro?"disabled":""}>Cổ vũ</button><button class="btn sm ${mv&&mv.s==="rest"?"warn":""}" data-a="vote" data-v="rest" data-m="${m.id}" ${ro?"disabled":""}>Nghỉ</button></div><div style="flex-basis:100%;width:100%">${vConf(mv)}</div>`:`<button class="btn sm" data-a="modal" data-v="iam">Chọn tên</button>`}</div>`}).join("")}</div></div></div>`;
+}
+function vWeek(){
+  const m=curMatch();
+  const posBar=S.meId&&!posOf(S.meId).length?`<div class="card" style="margin-bottom:14px"><div class="row"><div style="flex:1;min-width:200px"><b>Anh chưa chọn vị trí thi đấu</b><div class="small muted">Chọn để admin chia đội đúng sở trường.</div></div><button class="btn pri" data-a="modal" data-v="pos">Chọn vị trí</button></div></div>`:"";
+  if(!m)return `<div class="card empty"><h3>Chưa có trận nào</h3><p>${S.isAdmin?"Tạo trận đầu tiên để anh em bắt đầu vote.":"Khi admin tạo trận, lịch và nút vote sẽ hiện ở đây."}</p>${S.isAdmin?'<button class="btn pri" data-a="modal" data-v="newMatch">Tạo trận</button>':""}</div>`;
+  const back=S.selMatch&&(!nextMatch()||nextMatch().id!==S.selMatch)?`<button class="btn ghost sm" style="align-self:flex-start" data-a="unsel">← Về tuần này</button>`:"";
+  return `${posBar}${back?`<div style="margin-bottom:12px">${back}</div>`:""}<div class="cols">
+   <div class="colL">${heroCard(m)}${voteStrip(m)}${truocTran(m)}${doiHinh(m)}${m.status==="finished"?tangCard(m):""}${S.isAdmin?adminCard(m):""}${S.isAdmin&&m.status==="finished"?psCard(m):""}</div>
+   <div class="colR">${weekVote()}${voteList(m)}${predCard(m)}</div></div>`;
+}
+function heroCard(m){
+  const g=voteGroups(m.id),slots=(m.teamSize||C().teamSize)*2,play=g.play.length,fin=m.status==="finished",can=m.status==="cancelled";
+  const t=S.teams[m.id],locked=voteLocked(m);
+  const b=bk(m.kickoff),st=fin?"Đã kết thúc":can?"Đã hủy":t?"Đã chia đội":locked?"Đã khóa vote":"Đang mở vote";
+  const over=Math.max(0,play-slots);
+  const segs=`<div class="segs" style="--n:${slots}">${Array.from({length:slots},(_,i)=>`<i class="${i<play?"f":""}"></i>`).join("")}</div>${over?`<div class="segs" style="--n:${over};margin-top:6px">${Array.from({length:over},()=>'<i class="x"></i>').join("")}</div>`:""}`;
+  const mid=fin?`<div class="sc"><span class="tb">${m.sb}</span><span style="opacity:.5">–</span><span class="to">${m.so}</span></div>`
+    :can?`<div class="l"><b>Trận đã hủy</b></div>`
+    :`<div class="l">${Date.now()<new Date(m.kickoff)?"Bóng lăn sau":"Trận đang diễn ra"}<small>Vote ${locked?"đã chốt":"chốt"} lúc ${esc(fmtDT(m.deadline).replace(" · "," "))}</small></div><div class="t" data-cd="${esc(m.kickoff)}">--:--:--</div>`;
+  return `<div class="hero2 o1"><i class="pc"></i><i class="pl"></i><i class="pb"></i><i class="wm"></i><span class="pill">${st}</span>
+   <div class="hrow"><div><div class="hday">${WD[b.getUTCDay()]}</div><div class="hdate">${pad(b.getUTCDate())}/${pad(b.getUTCMonth()+1)}</div></div><div><div class="htime">${pad(b.getUTCHours())}:${pad(b.getUTCMinutes())}</div><div class="hven">${esc(m.venue)}<br>Sân ${m.teamSize||C().teamSize} người · cỏ nhân tạo</div></div></div>
+   <div class="hbox">${mid}</div>
+   ${fin&&m.notes?`<p style="margin:10px 2px 0;font-size:13px;opacity:.9">${esc(m.notes)}</p>`:""}
+   <div class="hcount"><b>${play}</b><em>/${slots}</em><span style="font-size:13px;opacity:.8">người đá · ${play>=slots?"dư "+(play-slots)+" người":"thiếu "+(slots-play)+" người"}</span></div>${segs}
+   <div class="hleg"><span style="color:#fff">${play} đá</span><span style="color:#7FDBFF">${g.cheer.length} cổ vũ</span><span style="color:#A8B2D8">${g.rest.length} nghỉ</span><span style="color:#7d8ab8">${g.pending.length} chưa vote</span></div></div>`;
+}
+function voteStrip(m){
+  const locked=voteLocked(m),mv=S.meId?voteOf(m.id,S.meId):null,ro=S.canWrite===false;
+  if(m.status!=="open")return "";
+  if(locked)return `<div class="card o2 vstrip"><span class="ic">${ICON.user.replace('<svg','<svg width="20" height="20"')}</span><div style="flex:1;min-width:180px"><b>Đã hết vote trận này</b><div class="small muted">Vote đã chốt lúc ${esc(fmtDT(m.deadline).replace(" · "," "))}. Muốn đổi, nhắn admin nhé.${mv?" Anh đang chọn: "+(mv.s==="play"?"ĐÁ":mv.s==="cheer"?"CỔ VŨ":"NGHỈ")+".":""}</div></div>${S.meId?"":'<button class="btn ghost sm" data-a="modal" data-v="iam">Chọn tên</button>'}</div>`;
+  if(!S.meId)return `<div class="card o2 vstrip"><div style="flex:1;min-width:180px"><b>Chọn tên để vote</b><div class="small muted">Chỉ cần chọn một lần trên máy này.</div></div><button class="btn pri" data-a="modal" data-v="iam">Chọn tên</button></div>`;
+  return `<div class="card o2"><div class="small muted" style="margin-bottom:10px">${mv?"Anh đang chọn: <b style=\"color:var(--ink)\">"+(mv.s==="play"?"ĐÁ":mv.s==="cheer"?"CỔ VŨ":"NGHỈ")+"</b>":"Anh chưa vote"} · chốt vote ${esc(fmtDT(m.deadline).replace(" · "," "))}</div>
+   <div class="grid2" style="grid-template-columns:repeat(3,1fr)"><button class="btn ${mv&&mv.s==="play"?"pri":""}" data-a="vote" data-v="play" data-m="${m.id}" ${ro?"disabled":""}>Vote đá</button><button class="btn ${mv&&mv.s==="cheer"?"pri":""}" data-a="vote" data-v="cheer" data-m="${m.id}" ${ro?"disabled":""}>Cổ vũ</button><button class="btn ${mv&&mv.s==="rest"?"warn":""}" data-a="vote" data-v="rest" data-m="${m.id}" ${ro?"disabled":""}>Vote nghỉ</button></div>${vConf(mv)}</div>`;
+}
+function voteList(m){
+  const g=voteGroups(m.id),t=S.vtab,list=g[t];
+  const chip=id=>{const x=mem(id)||{};return `<span class="pchip ${id===S.meId?"me":""}"><i class="a2">${esc(initials(nm(id)))}</i>${esc(nm(id))}${x.hlv?'<b class="hlv">HLV</b>':""}</span>`};
+  return `<div class="o3 stack" style="gap:10px"><div class="sec">Danh sách vote</div><div class="card stack" style="gap:14px">
+   <div class="tabs">${[["play","Đá"],["cheer","Cổ vũ"],["rest","Nghỉ"],["pending","Chưa vote"]].map(([k,l])=>`<button class="tab ${t===k?"on":""}" data-a="vtab" data-v="${k}">${l}<i>${g[k].length}</i></button>`).join("")}</div>
+   <div class="pchips">${list.length?list.map(chip).join(""):'<span class="muted small">Chưa có ai</span>'}</div></div></div>`;
+}
+function predCard(m){
+  const started=Date.now()>=new Date(m.kickoff).getTime()||m.status!=="open";
+  const mine=S.meId?S.pred[m.id+"__"+S.meId]:null;
+  const list=Object.entries(S.pred).filter(([k])=>k.startsWith(m.id+"__")).map(([k,p])=>({id:k.split("__")[1],...p}));
+  const n=list.length,cnt={B:0,D:0,O:0};list.forEach(p=>cnt[outcome(p.b,p.o)]++);
+  const pc=k=>n?Math.round(cnt[k]*100/n):0;
+  return `<div class="o4 stack" style="gap:10px"><div class="row"><div class="sec">Đoán tỷ số</div><span class="sp"></span><span class="small muted">Chốt lúc bóng lăn</span></div><div class="card stack">
+   <div class="pred"><label><span class="row" style="gap:6px"><i class="dot" style="background:var(--blue)"></i>Đội Xanh</span><input id="pB" type="number" min="0" inputmode="numeric" value="${mine?mine.b:0}" ${started||!S.meId?"disabled":""}></label><span class="co">:</span><label><span class="row" style="gap:6px"><i class="dot" style="background:var(--orange)"></i>Đội Cam</span><input id="pO" type="number" min="0" inputmode="numeric" value="${mine?mine.o:0}" ${started||!S.meId?"disabled":""}></label></div>
+   <div><div class="bar2" style="height:8px;display:flex;background:var(--soft)"><i style="width:${pc("B")}%;background:var(--blue)"></i><i style="width:${pc("D")}%;background:#7d8ab8"></i><i style="width:${pc("O")}%;background:var(--orange)"></i></div>
+   <div class="row small muted" style="margin-top:6px"><span>${pc("B")}% đoán Xanh thắng</span><span class="sp"></span><span>${pc("D")}% hòa</span><span class="sp"></span><span>${pc("O")}% Cam thắng</span></div></div>
+   <div class="small muted">${n} người đã đoán · đúng tỷ số +${C().ptsExact} điểm, đúng kết quả +${C().ptsResult} điểm vào BXH Thánh dự đoán.</div>
+   ${S.meId?`<button class="btn pri" data-a="pred" data-m="${m.id}" ${started?"disabled":""}>${started?"Đã khóa dự đoán":mine?"Đổi dự đoán":"Chốt dự đoán"}</button>`:'<button class="btn" data-a="modal" data-v="iam">Chọn tên để đoán</button>'}
+   ${n?`<div class="list">${list.map(p=>{const pt=predPoints(m,p);return `<div class="li"><span class="av" style="width:30px;height:30px;font-size:11px">${esc(initials(nm(p.id)))}</span><div class="grow ell">${esc(nm(p.id))}</div><span class="num" style="font-size:20px">${p.b}–${p.o}</span>${pt==null?"":`<span class="pill ${pt>=C().ptsExact?"ok":pt>0?"acc":""}">+${pt}</span>`}</div>`}).join("")}</div>`:""}</div></div>`;
+}
+function truocTran(m){
+  const an=S.analysis[m.id],cm=Object.values(S.comments).filter(c=>c.m===m.id).length,t=S.truoc;
+  let body="";
+  if(t==="ai"){
+    body=an?`<div class="card ai stack" style="gap:12px"><div class="row"><span class="pill warn">✦ AI nhận định</span><span class="sp"></span><span class="tiny muted">${esc(fmtDT(an.t).split(" · ").reverse().join(" "))}</span></div><p style="margin:0;line-height:1.7">${esc(an.text)}</p>
+      <div class="bar2"><i style="width:${an.pb}%;background:var(--blue)">${an.pb>14?"Xanh "+an.pb+"%":""}</i><i style="width:${an.pd}%;background:#7d8ab8">${an.pd>12?"Hòa":""}</i><i style="width:${an.po}%;background:var(--orange)">${an.po>14?"Cam "+an.po+"%":""}</i></div>
+      <div class="tiny muted">Dựa trên đội hình đã chia và kết quả các trận trước.</div></div>`
+     :`<div class="card empty"><h3>Chưa có nhận định</h3><p>Admin sẽ tạo nhận định sau khi chia đội.</p></div>`;
+  }else{
+    const list=Object.entries(S.comments).map(([id,c])=>({id,...c})).filter(c=>c.m===m.id).sort((a,b)=>String(a.t).localeCompare(String(b.t)));
+    body=`<div class="card stack"><div class="list">${list.length?list.map(c=>`<div class="li" style="align-items:flex-start"><span class="av">${esc(initials(nm(c.who)))}</span><div class="grow"><div class="tiny muted">${esc(nm(c.who))} · ${esc(fmtDT(c.t))}</div><div style="overflow-wrap:anywhere">${esc(c.text)}</div></div>${S.isAdmin?`<button class="btn sm ghost" data-a="delc" data-v="${c.id}" aria-label="Xóa">✕</button>`:""}</div>`).join(""):'<div class="empty">Chưa ai khẩu chiến. Mở màn đi anh em.</div>'}</div>
+     ${S.meId?`<div class="row" style="flex-wrap:nowrap"><input id="cmt" type="text" maxlength="280" placeholder="Nói gì đó về trận này…" style="flex:1"><button class="btn pri" data-a="cmt" data-m="${m.id}">Gửi</button></div>`:'<p class="muted small" style="margin:0">Chọn tên để bình luận.</p>'}</div>`;
+  }
+  return `<div class="o5 stack" style="gap:10px"><div class="row"><div class="sec">Trước trận</div><span class="sp"></span><div class="tabs"><button class="tab ${t==="ai"?"on":""}" data-a="truoc" data-v="ai">✦ AI nhận định</button><button class="tab ${t==="talk"?"on":""}" data-a="truoc" data-v="talk">Khẩu chiến<i>${cm}</i></button></div></div>${body}</div>`;
+}
+function teamView(mid){const t=S.teams[mid];if(!t)return null;if(S.hv&&S.hv.m===mid&&t.hist){const h=t.hist.find(x=>x.n===S.hv.n);if(h)return {blue:h.blue,orange:h.orange,n:h.n,cur:false}}return {blue:t.blue,orange:t.orange,n:t.n||1,cur:true}}
+function teamCard(color,ids,size,mid,cur){
+  const starters=ids.slice(0,size),subs=ids.slice(size);
+  const by={TM:[],HV:[],TV:[],"TĐ":[],"?":[]};starters.forEach(id=>{const p=posOf(id);by[p[0]&&by[p[0]]?p[0]:"?"].push(id)});
+  const c=color==="blue"?"var(--blue)":"var(--orange)";
+  const pl=id=>`<div class="li" style="padding:7px 0"><span class="av n" style="width:30px;height:30px">${esc((mem(id)||{}).no||"")||esc(initials(nm(id)))}</span><div class="grow ell" style="${id===S.meId?"font-weight:700;color:var(--ice)":""}">${esc(nm(id))}</div>${S.isAdmin&&cur?`<button class="btn sm ghost" data-a="swap" data-v="${id}" data-c="${color}" data-m="${mid}">Đổi đội</button>`:""}</div>`;
+  return `<div class="card"><div class="row"><i class="dot" style="background:${c}"></i><b style="color:${c}">ĐỘI ${color==="blue"?"XANH":"CAM"}</b><span class="sp"></span><span class="muted small">${ids.length} người${teamSizeLabel(size)?" · "+teamSizeLabel(size):""}</span></div>
+   ${["TM","HV","TV","TĐ","?"].filter(k=>by[k].length).map(k=>`<div class="lbl" style="margin-top:10px">${k==="?"?"Chưa rõ vị trí":k}</div>${by[k].map(pl).join("")}`).join("")}
+   ${subs.length?`<div class="lbl" style="margin-top:10px">Dự bị</div>${subs.map(pl).join("")}`:""}</div>`;
+}
+function doiHinh(m){
+  const t=S.teams[m.id],g=voteGroups(m.id),size=m.teamSize||C().teamSize,tv=teamView(m.id);
+  const head=`<div class="row"><div class="sec">Đội hình</div><span class="sp"></span>${t&&t.hist&&t.hist.length?`<select id="hvSel" data-a="hv" data-m="${m.id}" style="width:auto"><option value="">Lần chia ${t.n||1} (mới nhất)</option>${t.hist.slice().reverse().map(h=>`<option value="${h.n}" ${S.hv&&S.hv.n===h.n&&S.hv.m===m.id?"selected":""}>Lần chia ${h.n}</option>`).join("")}</select>`:t?`<span class="small muted">${t.n||1} lần chia</span>`:""}${t?`<button class="btn sm" data-a="png" data-m="${m.id}">Tải ảnh</button>`:""}</div>`;
+  if(!tv)return `<div class="o6 stack" style="gap:10px">${head}<div class="card empty"><h3>Chưa chia đội</h3><p>${g.play.length} người đã vote đá${g.play.length<2?" — cần ít nhất 2 người":""}.</p>${S.isAdmin&&m.status!=="cancelled"?`<button class="btn pri" data-a="split" data-m="${m.id}" ${g.play.length<2?"disabled":""}>Chia đội cân sức</button>`:'<p class="small">Admin sẽ chia đội sau khi chốt vote.</p>'}</div></div>`;
+  return `<div class="o6 stack" style="gap:10px">${head}${tv.cur?"":`<div class="small muted">Đang xem lần chia cũ, bấm "Lần chia ${t.n||1}" để quay lại.</div>`}
+   <div class="teams2">${teamCard("blue",tv.blue,size,m.id,tv.cur)}${teamCard("orange",tv.orange,size,m.id,tv.cur)}</div>
+   ${S.isAdmin&&m.status==="open"?`<div class="row"><button class="btn" data-a="split" data-m="${m.id}">Chia lại</button><button class="btn" data-a="analyze" data-m="${m.id}" ${S.sample?"":"disabled"}>${S.analysis[m.id]?"Viết lại nhận định":"Tạo nhận định AI"}</button></div><p class="tiny muted" style="margin:0">Chỉ số trình độ dùng để chia đội chỉ admin nhìn thấy.</p>`:""}</div>`;
+}
+function psCard(m){
+  const t=S.teams[m.id],ps=S.pstats[m.id]||{g:{},a:{}},g=voteGroups(m.id);
+  const ids=t?[...t.blue,...t.orange]:g.play;if(!ids.length)return "";
+  return `<div class="card o8 stack"><div class="lbl">Admin · Ghi bàn, kiến tạo, MVP</div><div class="list">${ids.map(id=>`<div class="li"><div class="grow ell">${esc(nm(id))}</div><label class="small muted">Bàn <input id="psg_${id}" type="number" min="0" inputmode="numeric" value="${(ps.g||{})[id]||0}" style="width:60px;padding:8px"></label><label class="small muted">KT <input id="psa_${id}" type="number" min="0" inputmode="numeric" value="${(ps.a||{})[id]||0}" style="width:60px;padding:8px"></label></div>`).join("")}</div>
+   <label class="field"><span>MVP trận</span><select id="psm"><option value="">— chưa chọn —</option>${ids.map(id=>`<option value="${id}" ${ps.mvp===id?"selected":""}>${esc(nm(id))}</option>`).join("")}</select></label><button class="btn pri" data-a="savePs" data-m="${m.id}">Lưu số liệu cầu thủ</button></div>`;
+}
+function adminCard(m){
+  const fin=m.status==="finished";if(m.status==="cancelled")return `<div class="card o8"><span class="pill bad">Trận đã hủy</span></div>`;
+  return `<div class="card o8 stack"><div class="lbl">Admin · ${esc(m.venue)}</div>
+   <div class="grid2"><label class="field"><span>Vote hộ cho</span><select id="proxyWho">${activeMembers().map(x=>`<option value="${x.id}">${esc(nm(x.id))}</option>`).join("")}</select></label>
+   <div class="field"><span>&nbsp;</span><div class="grid2" style="grid-template-columns:repeat(3,1fr)"><button class="btn sm pri" data-a="proxy" data-v="play" data-m="${m.id}">Đá</button><button class="btn sm" data-a="proxy" data-v="cheer" data-m="${m.id}">Cổ vũ</button><button class="btn sm" data-a="proxy" data-v="rest" data-m="${m.id}">Nghỉ</button></div></div></div>
+   ${fin?"":`<div class="grid2"><label class="field"><span>Tỷ số Xanh</span><input id="rsB" type="number" min="0" inputmode="numeric"></label><label class="field"><span>Tỷ số Cam</span><input id="rsO" type="number" min="0" inputmode="numeric"></label></div>
+   <label class="field"><span>Ghi chú (bàn thắng, cầu thủ xuất sắc)</span><textarea id="rsN"></textarea></label><button class="btn pri" data-a="finish" data-m="${m.id}">Chốt kết quả</button>`}
+   <div class="row">${fin?`<button class="btn sm ghost" data-a="reopen" data-m="${m.id}">Mở lại để sửa kết quả</button>`:`<button class="btn sm bad" data-a="cancelMatch" data-m="${m.id}">Hủy trận</button>`}</div></div>`;
+}
+function tangCard(m){
+  const out=[`<div class="row"><div class="sec">Tăng 2 · Tăng 3</div></div><p class="muted small" style="margin:0">Tiền tăng là sổ riêng của anh em, không tính vào quỹ chung.</p>`];
+  const n=S.tn;
+  out.push(`<div class="tabs">${[2,3].map(k=>`<button class="tab ${n===k?"on":""}" data-a="tn" data-v="${k}">Tăng ${k}</button>`).join("")}</div>`);
+  const key=m.id+"_"+n,r=S.rounds[key]||{},votes=Object.entries(S.rvotes).filter(([k])=>k.startsWith(key+"__")).map(([k,v])=>({id:k.split("__")[1],...v}));
+  const join=votes.filter(v=>v.s==="join"),skip=votes.filter(v=>v.s==="skip"),mv=S.meId?S.rvotes[key+"__"+S.meId]:null,need=C().minPeople,ok=join.length>=need;
+  out.push(`<div class="card stack"><div class="row"><b>Tăng ${n}</b><span class="sp"></span><span class="pill ${ok?"ok":"warn"}">${join.length}/${need} người ${ok?"· chốt kèo":""}</span></div>
+   ${r.venue?`<div>Quán: <b>${esc(r.venue)}</b></div>`:'<div class="muted small">Chưa chốt quán.</div>'}
+   ${S.meId?`<div class="grid2"><button class="btn ${mv&&mv.s==="join"?"pri":""}" data-a="rvote" data-k="${key}" data-v="join">Đi tăng ${n}</button><button class="btn ${mv&&mv.s==="skip"?"warn":""}" data-a="rvote" data-k="${key}" data-v="skip">Bùng về</button></div>`:""}
+   <div class="pchips">${join.map(v=>`<span class="pchip ${v.went===false?"rev":""}"><i class="a2">${esc(initials(nm(v.id)))}</i>${esc(nm(v.id))}</span>`).join("")||'<span class="muted small">Chưa ai vote đi</span>'}</div>
+   ${skip.length?`<div class="tiny muted">Bùng: ${skip.map(v=>esc(nm(v.id))).join(", ")}</div>`:""}</div>`);
+  if(S.isAdmin){const venues=C().venues||[];
+    out.push(`<div class="card stack"><div class="lbl">Admin · Tăng ${n}</div>
+     <label class="field"><span>Quán</span><input id="rVenue" type="text" list="vl" value="${esc(r.venue||"")}" placeholder="Chọn quán quen hoặc gõ tên"><datalist id="vl">${venues.map(v=>`<option value="${esc(v)}">`).join("")}</datalist></label>
+     <div class="lbl">Ai thật sự đi (tick)</div><div class="row" style="gap:8px">${join.map(v=>`<label class="chip"><input type="checkbox" id="went_${v.id}" ${v.went!==false?"checked":""}> ${esc(nm(v.id))}</label>`).join("")||'<span class="muted small">Chưa có ai vote đi</span>'}</div>
+     <div class="grid2"><label class="field"><span>Tổng bill</span><input id="rTotal" type="text" inputmode="numeric" placeholder="vd 1800k" value="${r.total?r.total:""}"></label>
+     <label class="field"><span>Ai bao / ứng tiền</span><select id="rPayer"><option value="">— chia đều —</option>${activeMembers().map(x=>`<option value="${x.id}" ${r.payer===x.id?"selected":""}>${esc(nm(x.id))}</option>`).join("")}</select></label></div>
+     <button class="btn pri" data-a="bill" data-k="${key}">Lưu và chia bill</button></div>`);}
+  if(r.total&&r.shares){const ids=Object.keys(r.shares);
+    out.push(`<div class="card"><div class="lbl">Chia bill · tổng ${vnd(r.total)}</div><div class="tiny muted" style="margin:4px 0 8px">${vnd(r.total)} ÷ ${ids.length} người${r.payer?" · "+esc(nm(r.payer))+" ứng trước":""}</div><div class="list">${ids.map(id=>`<div class="li"><div class="grow ell">${esc(nm(id))}</div><span class="num" style="font-size:18px">${vnd(r.shares[id])}</span>${r.paid&&r.paid[id]?'<span class="pill ok">đã trả</span>':'<span class="pill warn">còn nợ</span>'}${S.isAdmin?`<button class="btn sm ghost" data-a="paid" data-k="${key}" data-v="${id}">${r.paid&&r.paid[id]?"Bỏ":"Đã trả"}</button>`:""}</div>`).join("")}</div></div>`);}
+  return `<div class="o7 stack" style="gap:10px">${out.join("")}</div>`;
+}
+
+/* ---------- other pages ---------- */
+function vHist(){
+  const l=matchList().reverse();
+  if(!l.length)return `<div class="card empty"><h3>Chưa có trận nào</h3><p>Lịch sử các trận sẽ hiện ở đây.</p></div>`;
+  return `<div class="card"><div class="list">${l.map(f=>{const g=voteGroups(f.id);return `<button class="li" style="text-align:left;width:100%" data-a="sel" data-v="${f.id}"><div class="grow"><div class="ell" style="font-weight:600">${esc(f.venue)}</div><div class="tiny muted">${esc(fmtDT(f.kickoff))} · ${g.play.length} người đá</div></div>${f.status==="finished"?`<span class="num" style="font-size:26px"><span class="tb">${f.sb}</span> – <span class="to">${f.so}</span></span>`:`<span class="pill ${f.status==="cancelled"?"bad":"acc"}">${f.status==="cancelled"?"đã hủy":"sắp tới"}</span>`}</button>`}).join("")}</div></div>`;
+}
+function vMemo(){
+  const items=Object.entries(S.media).map(([id,x])=>({id,...x})).sort((a,b)=>String(b.t).localeCompare(String(a.t)));
+  const ms=matchList().reverse();
+  const filt=S.mediaMatch?items.filter(x=>x.m===S.mediaMatch):items;
+  return `<div class="row"><select id="mm" data-a="mm" style="width:auto"><option value="">Tất cả trận</option>${ms.map(x=>`<option value="${x.id}" ${S.mediaMatch===x.id?"selected":""}>${esc(fmtD(x.kickoff))} · ${esc(x.venue)}</option>`).join("")}</select><span class="sp"></span>
+   ${window.__GAS&&window.__DRIVE?`<label class="btn pri" style="cursor:pointer">+ Thêm ảnh / video<input id="upf" data-a="upload2" type="file" accept="image/*,video/*" multiple hidden></label>`:S.isAdmin&&S.assets?`<label class="btn pri" style="cursor:pointer">+ Thêm ảnh<input id="upf" data-a="upload" type="file" accept="image/*" multiple hidden></label>`:""}</div>
+   ${S.isAdmin&&S.assets&&!S.mediaMatch?'<p class="tiny muted" style="margin:0">Chọn một trận ở trên rồi thêm ảnh để gắn ảnh vào trận đó.</p>':""}
+   ${filt.length?`<div class="gal">${filt.map(x=>`<div style="position:relative"><a href="${esc(x.link||x.url)}" target="_blank" rel="noopener"><img loading="lazy" src="${esc(x.url)}" alt="Kỷ niệm" onerror="this.style.display='none'">${x.kind==="video"?'<span style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:38px;color:#fff;text-shadow:0 2px 8px #000">▶</span>':""}</a><div class="tiny" style="position:absolute;left:8px;bottom:6px;right:8px;color:#fff;text-shadow:0 1px 4px #000;pointer-events:none">${esc(x.who&&mem(x.who)?nm(x.who):"")}</div>${S.isAdmin?`<button class="btn sm" style="position:absolute;top:6px;right:6px;padding:4px 9px" data-a="delmedia" data-v="${x.id}">✕</button>`:""}</div>`).join("")}</div>`:`<div class="card empty"><h3>Chưa có ảnh kỷ niệm</h3><p>${S.isAdmin?"Chọn trận rồi bấm Thêm ảnh để lưu khoảnh khắc đầu tiên.":"Admin sẽ đăng ảnh sau mỗi trận."}</p></div>`}`;
+}
+function vPlay(){
+  const f=finishedMatches()[0];
+  if(!f)return `<div class="card empty"><h3>Chưa có trận nào kết thúc</h3><p>Sau khi chốt kết quả trận đầu tiên, vote tăng 2 và tăng 3 sẽ mở ở đây.</p></div>`;
+  const st=stats(S.bxhPeriod==="all"?"all":"quarter");
+  const rows=(k,fmt)=>{const a=Object.entries(st).filter(([,s])=>s[k]>0).sort((x,y)=>y[1][k]-x[1][k]);return a.length?`<div class="list">${a.slice(0,8).map(([id,s],i)=>`<div class="li"><span class="rk ${i===0?"g1":""}">${i+1}</span><div class="grow ell">${esc(nm(id))}</div><span class="num" style="font-size:20px">${fmt(s)}</span></div>`).join("")}</div>`:'<div class="small muted">Chưa có dữ liệu.</div>'};
+  return `<p class="muted small" style="margin:0 0 12px">Trận gần nhất: ${esc(f.venue)} · ${esc(fmtD(f.kickoff))}</p>
+   <div class="cols"><div class="colL">${tangCard(f)}</div><div class="colR"><div class="card"><div class="sec" style="font-size:22px">Thánh nhậu</div>${rows("went",s=>s.went+" lần")}</div><div class="card"><div class="sec" style="font-size:22px">Chuyên gia bùng</div>${rows("bung",s=>s.bung+" lần")}</div><div class="card"><div class="sec" style="font-size:22px">Mạnh thường quân</div>${rows("sponsor",s=>s.sponsor+" lần")}</div><p class="tiny muted" style="margin:0">Bảng cho vui, tính trong quý này. Bùng = vote đi nhưng không có tên trong bill được chia.</p></div></div>`;
+}
+function vSeason(){
+  const per="year",fin=finishedMatches().filter(m=>inPeriod(m.kickoff,per)),st=stats(per);
+  if(!fin.length)return `<div class="card empty"><h3>Chưa đủ dữ liệu</h3><p>Tổng kết mùa hiện khi có trận đã chốt kết quả trong năm nay.</p></div>`;
+  const goals=fin.reduce((s,m)=>s+m.sb+m.so,0),bw=fin.filter(m=>m.sb>m.so).length,ow=fin.filter(m=>m.so>m.sb).length,dr=fin.length-bw-ow;
+  const top=(k)=>{const a=Object.entries(st).filter(([,s])=>s[k]>0).sort((x,y)=>y[1][k]-x[1][k])[0];return a?esc(nm(a[0]))+" · "+a[1][k]:"Chưa có"};
+  const all=fundList(),fi=all.filter(t=>t.type==="in"&&inPeriod(t.date,per)).reduce((s,t)=>s+t.amount,0),fo=all.filter(t=>t.type==="out"&&inPeriod(t.date,per)).reduce((s,t)=>s+t.amount,0);
+  return `<div class="stat4"><div class="s"><b>${fin.length}</b>trận đã đá</div><div class="s"><b>${goals}</b>bàn thắng</div><div class="s"><b>${bw}-${dr}-${ow}</b>Xanh thắng - hòa - Cam thắng</div><div class="s"><b>${(goals/fin.length).toFixed(1)}</b>bàn mỗi trận</div></div>
+  <div class="card"><div class="list"><div class="li"><div class="grow muted">Chuyên cần nhất</div><b>${top("play").replace(/ · (\d+)/," · $1 trận")}</b></div><div class="li"><div class="grow muted">Thánh dự đoán</div><b>${top("pred").replace(/ · (\d+)/," · $1 điểm")}</b></div><div class="li"><div class="grow muted">Thánh nhậu</div><b>${top("went").replace(/ · (\d+)/," · $1 lần")}</b></div><div class="li"><div class="grow muted">Thu quỹ năm nay</div><b>${vnd(fi)}</b></div><div class="li"><div class="grow muted">Chi quỹ năm nay</div><b>${vnd(fo)}</b></div><div class="li"><div class="grow"><b>Dư/thiếu năm nay</b></div><b style="color:${fi-fo>=0?"var(--ok)":"var(--bad)"}">${fi-fo>=0?"Dư ":"Thiếu "}${vnd(Math.abs(fi-fo))}</b></div></div></div>`;
+}
+function vFb(){
+  const list=Object.entries(S.feedback).map(([id,f])=>({id,...f})).sort((a,b)=>String(b.t).localeCompare(String(a.t)));
+  return `<div class="card stack"><div class="lbl">Góp ý cải tiến</div><textarea id="fbT" maxlength="600" placeholder="Anh thấy app thiếu gì, khó dùng chỗ nào?"></textarea><button class="btn pri" data-a="fb">Gửi góp ý</button></div>
+   ${S.isAdmin?`<div class="card"><div class="lbl" style="margin-bottom:4px">Góp ý đã nhận (${list.length})</div><div class="list">${list.length?list.map(f=>`<div class="li" style="align-items:flex-start"><div class="grow"><div class="tiny muted">${esc(f.who?nm(f.who):"Ẩn danh")} · ${esc(fmtDT(f.t))}</div><div style="overflow-wrap:anywhere">${esc(f.text)}</div></div><button class="btn sm ghost" data-a="delfb" data-v="${f.id}" aria-label="Xóa">✕</button></div>`).join(""):'<div class="empty">Chưa có góp ý nào.</div>'}</div></div>`:""}`;
+}
+function posPicker(id){
+  const cur=posOf(id);
+  return `<div class="grid2" style="grid-template-columns:repeat(2,1fr)">${POS.map(p=>`<button class="btn ${cur[0]===p?"pri":cur.includes(p)?"":"ghost"}" style="${cur.includes(p)&&cur[0]!==p?"outline:2px solid var(--accent)":""};flex-direction:column;padding:14px" data-a="setpos" data-v="${p}"><b style="font-size:20px">${p}</b><span class="small">${POSN[p]}</span></button>`).join("")}</div><p class="tiny muted" style="margin:8px 0 0">Bấm để chọn. Chọn được tối đa 2 vị trí, vị trí chọn đầu tiên là sở trường chính (tô sáng). Sân 7 người cỏ nhân tạo: 1 thủ môn + 6 cầu thủ.</p>`;
+}
+function idPicker(){
+  const ms=activeMembers();
+  if(!ms.length)return `<div class="empty"><h3>Chưa có thành viên nào</h3>${S.isAdmin?'<p>Vào Quản trị → Thành viên để thêm anh em.</p>':'<p>Admin chưa thêm danh sách thành viên.</p>'}</div>`;
+  return `<p class="muted small" style="margin:0 0 12px">Chọn tên của anh rồi nhập mã cá nhân (admin gửi riêng cho từng người). Chỉ cần đăng nhập một lần trên máy này.</p><div class="pchips">${ms.map(m=>`<button class="pchip ${m.id===S.meId?"me":""}" data-a="iam" data-v="${m.id}"><i class="a2">${esc(initials(nm(m.id)))}</i>${esc(nm(m.id))}</button>`).join("")}</div>${S.meId?'<button class="btn bad block" style="margin-top:14px" data-a="switch">Đăng xuất khỏi tên này</button>':""}`;
+}
+/* ---------- BXH ---------- */
+function stats(per){
+  const st={};const ensure=id=>st[id]||(st[id]={pred:0,predN:0,exact:0,play:0,w:0,d:0,l:0,gd:0,pts:0,fund:0,went:0,bung:0,sponsor:0,goals:0,assists:0,mvp:0});
+  const fin=finishedMatches().filter(m=>inPeriod(m.kickoff,per));
+  for(const m of fin){
+    for(const m2 of activeMembers()){const v=voteOf(m.id,m2.id);if(v&&v.s==="play")ensure(m2.id).play++}
+    for(const [k,p] of Object.entries(S.pred)){if(!k.startsWith(m.id+"__"))continue;const id=k.split("__")[1],pt=predPoints(m,p);if(pt==null)continue;const s=ensure(id);s.pred+=pt;s.predN++;if(pt===C().ptsExact)s.exact++}
+    const ps=S.pstats[m.id];if(ps){for(const [id,n] of Object.entries(ps.g||{}))ensure(id).goals+=Number(n)||0;for(const [id,n] of Object.entries(ps.a||{}))ensure(id).assists+=Number(n)||0;if(ps.mvp)ensure(ps.mvp).mvp++}
+    const t=S.teams[m.id];if(t&&m.sb!=null){for(const [side,gf,ga] of [["blue",m.sb,m.so],["orange",m.so,m.sb]])for(const id of t[side].slice(0,m.teamSize||C().teamSize)){const s=ensure(id);s.gd+=gf-ga;if(gf>ga){s.w++;s.pts+=3}else if(gf===ga){s.d++;s.pts++}else s.l++}}
+    for(const n of [2,3]){const key=m.id+"_"+n,r=S.rounds[key];if(!r)continue;const vs=Object.entries(S.rvotes).filter(([k])=>k.startsWith(key+"__"));
+      for(const [k,v] of vs){const id=k.split("__")[1];if(v.s==="join"){if(r.shares){if(r.shares[id]!=null)ensure(id).went++;else ensure(id).bung++}}}
+      if(r.payer&&r.shares)ensure(r.payer).sponsor++}
+  }
+  for(const t of fundList()){if(t.type==="in"&&t.mid&&!t.rev&&inPeriod(t.date,per)&&!t.revOf)ensure(t.mid).fund+=t.amount}
+  return st;
+}
+function vBxh(){
+  const per=S.bxhPeriod,st=stats(per);const tabs=[["tot","Tổng điểm"],["pred","Thánh dự đoán"],["att","Chuyên cần"],["perf","Thành tích"],["fund","Đóng góp quỹ"],["hang","Nhậu & Bùng"]];
+  const rows=(key,fmt,filter)=>{const a=Object.entries(st).filter(([,s])=>filter?filter(s):s[key]>0).sort((x,y)=>y[1][key]-x[1][key]||nm(x[0]).localeCompare(nm(y[0]),"vi"));
+    if(!a.length)return '<div class="empty">Chưa có dữ liệu cho kỳ này.</div>';
+    return `<div class="list">${a.map(([id,s],i)=>`<div class="li"><span class="rk ${i===0?"g1":""}">${i+1}</span><div class="grow ell ${id===S.meId?"tb":""}" style="${id===S.meId?"font-weight:700":""}">${esc(nm(id))}</div><span class="num" style="font-weight:700">${fmt(s)}</span></div>`).join("")}</div>`};
+  let body="";
+  if(S.bxhTab==="tot"){const c0=C(),tp=s=>s.pts+s.play*c0.ptsPlay+s.goals*c0.ptsGoal+s.assists*c0.ptsAssist+s.mvp*c0.ptsMvp+s.pred;const a=Object.entries(st).map(([id,s])=>[id,s,tp(s)]).filter(([,s,t])=>s.play>0||s.w+s.d+s.l>0||s.predN>0||s.goals>0).sort((x,y)=>y[2]-x[2]||y[1].gd-x[1].gd||nm(x[0]).localeCompare(nm(y[0]),"vi"));
+    body=a.length?`<div class="scroll-x"><table class="tbl"><tr><th>Cầu thủ</th><th>Tổng</th><th>Trận đá</th><th>Đội T-H-B</th><th>Bàn</th><th>KT</th><th>MVP</th><th>Đoán</th></tr>${a.map(([id,s,t],i)=>`<tr><td><span class="rk ${i===0?"g1":""}" style="margin-right:8px">${i+1}</span><span class="${id===S.meId?"tb":""}">${esc(nm(id))}</span></td><td class="num"><b style="font-size:18px">${t}</b></td><td class="num">${s.play}<span class="muted"> (+${s.play*c0.ptsPlay})</span></td><td class="num">${s.w}-${s.d}-${s.l}<span class="muted"> (+${s.pts})</span></td><td class="num">${s.goals}</td><td class="num">${s.assists}</td><td class="num">${s.mvp}</td><td class="num">${s.pred}</td></tr>`).join("")}</table></div><p class="tiny muted" style="margin:8px 0 0">Tổng điểm = điểm đội (thắng 3, hòa 1, thua 0) + ${c0.ptsPlay} mỗi trận có mặt + ${c0.ptsGoal} mỗi bàn + ${c0.ptsAssist} mỗi kiến tạo + ${c0.ptsMvp} mỗi lần MVP + điểm đoán tỷ số. Admin đổi được ở Quản trị.</p>`:'<div class="empty">Chưa có trận nào chốt kết quả trong kỳ này.</div>'}
+  else if(S.bxhTab==="pred")body=rows("pred",s=>s.pred+" điểm"+(s.exact?` · ${s.exact} đúng tỷ số`:""),s=>s.predN>0);
+  else if(S.bxhTab==="att")body=rows("play",s=>s.play+" trận");
+  else if(S.bxhTab==="fund")body=rows("fund",s=>vnd(s.fund));
+  else if(S.bxhTab==="perf"){const a=Object.entries(st).filter(([,s])=>s.w+s.d+s.l>0).sort((x,y)=>y[1].pts-x[1].pts||y[1].gd-x[1].gd);
+    body=a.length?`<div class="scroll-x"><table class="tbl"><tr><th>Tên</th><th>Điểm</th><th>T</th><th>H</th><th>B</th><th>HS</th></tr>${a.map(([id,s])=>`<tr><td>${esc(nm(id))}</td><td class="num"><b>${s.pts}</b></td><td class="num">${s.w}</td><td class="num">${s.d}</td><td class="num">${s.l}</td><td class="num">${s.gd>0?"+":""}${s.gd}</td></tr>`).join("")}</table></div><p class="tiny muted" style="margin:8px 0 0">Thắng 3, hòa 1, thua 0. Tính theo đội hình đã chia. HS = hiệu số bàn thắng.</p>`:'<div class="empty">Chưa có trận nào chia đội và chốt kết quả.</div>'}
+  else{const blocks=[["Thánh nhậu","went",s=>s.went+" lần đi"],["Chuyên gia bùng","bung",s=>s.bung+" lần bùng"],["Mạnh thường quân","sponsor",s=>s.sponsor+" lần bao"]];
+    body=blocks.map(([t,k,f])=>`<div class="lbl" style="margin:14px 0 4px">${t}</div>${rows(k,f)}`).join("")+'<p class="tiny muted" style="margin:10px 0 0">Bảng cho vui. Bùng = vote đi nhưng không có tên trong bill được chia.</p>'}
+  return `<div class="row"><h1 style="font-size:22px">Bảng xếp hạng</h1><span class="sp"></span><select id="per" data-a="per" style="width:auto"><option value="quarter" ${per==="quarter"?"selected":""}>Quý này</option><option value="year" ${per==="year"?"selected":""}>Năm nay</option><option value="all" ${per==="all"?"selected":""}>Tất cả</option></select></div>
+  <div class="tabs">${tabs.map(t=>`<button class="tab ${S.bxhTab===t[0]?"on":""}" data-a="bxt" data-v="${t[0]}">${t[1]}</button>`).join("")}</div><div class="card">${body}</div>`;
+}
+
+
+/* ---------- Quỹ ---------- */
+function fundFlags(list){
+  const flags=[],c=C();const seen={};
+  for(const t of list){
+    if(t.revOf)continue;
+    if(t.mid&&t.cat==="Phí thành viên (tháng)"&&t.period&&!t.rev){const k=t.mid+"|"+t.period;if(seen[k])flags.push(`${nm(t.mid)} có 2 khoản phí tháng ${t.period} (${fmtD(seen[k].date)} và ${fmtD(t.date)}). Cần xem lại.`);else seen[k]=t}
+    if(t.mid&&t.cat==="Phí thành viên (tháng)"&&c.fee>0&&!t.rev&&t.amount!==c.fee)flags.push(`${nm(t.mid)} đóng ${vnd(t.amount)} cho tháng ${t.period||"?"}, khác mức phí ${vnd(c.fee)}. Cần xem lại.`);
+  }
+  let run=0;for(const t of list){if(t.revOf&&false)continue;run+=(t.type==="in"?1:-1)*t.amount;if(run<0){flags.push(`Số dư âm (${vnd(run)}) sau khoản ${fmtD(t.date)} "${t.cat}". Cần xem lại.`);break}}
+  return flags;
+}
+function vQuy(){
+  const all=fundList(),c=C(),months=[...new Set(all.map(t=>monthKey(t.date)))].sort().reverse(),sel=S.fundMonth;
+  const tot=bal(all);
+  const inM=sel==="all"?all:all.filter(t=>monthKey(t.date)===sel),before=sel==="all"?[]:all.filter(t=>monthKey(t.date)<sel);
+  const sIn=inM.filter(t=>t.type==="in").reduce((s,t)=>s+t.amount,0),sOut=inM.filter(t=>t.type==="out").reduce((s,t)=>s+t.amount,0),open=bal(before),endB=open+sIn-sOut;
+  const word=n=>n>0?'<span style="color:var(--ok)">Dư '+vnd(n)+"</span>":n<0?'<span style="color:var(--bad)">Thiếu '+vnd(-n)+"</span>":"Cân bằng 0đ";
+  const byCat={};inM.forEach(t=>{const k=(t.type==="in"?"Thu · ":"Chi · ")+t.cat;byCat[k]=(byCat[k]||0)+t.amount});
+  const out=[];
+  out.push(`<div class="row"><h1 style="font-size:22px">Quỹ đội</h1><span class="sp"></span><select id="fm" data-a="fm" style="width:auto"><option value="all">Tất cả thời gian</option>${months.map(m=>`<option value="${m}" ${sel===m?"selected":""}>Tháng ${m.slice(5)}/${m.slice(0,4)}</option>`).join("")}</select></div>`);
+  out.push(`<div class="card"><div class="lbl">Số dư hiện tại</div><div class="big num" style="font-size:34px;color:${tot>=0?"var(--ice)":"var(--bad)"}">${vnd(tot)}</div><div style="margin-top:2px;font-weight:600">${word(tot)}</div>
+   <div class="list" style="margin-top:14px">${sel!=="all"?`<div class="li"><div class="grow muted">Đầu kỳ (trước tháng ${sel.slice(5)})</div><span class="num">${vnd(open)}</span></div>`:""}
+   <div class="li"><div class="grow muted">+ Tổng thu${sel==="all"?"":" trong kỳ"} (${inM.filter(t=>t.type==="in").length} khoản)</div><span class="num" style="color:var(--ok)">${vnd(sIn)}</span></div>
+   <div class="li"><div class="grow muted">− Tổng chi${sel==="all"?"":" trong kỳ"} (${inM.filter(t=>t.type==="out").length} khoản)</div><span class="num" style="color:var(--bad)">${vnd(sOut)}</span></div>
+   <div class="li"><div class="grow"><b>= ${sel==="all"?"Số dư":"Cuối kỳ"}</b></div><span class="num"><b>${vnd(endB)}</b></span></div></div>
+   <div class="small" style="margin-top:6px">${sel==="all"?"":"Kỳ này: "}${word(sIn-sOut).replace("Dư","Dư kỳ").replace("Thiếu","Thiếu kỳ")}</div></div>`);
+  if(Object.keys(byCat).length)out.push(`<div class="card"><div class="lbl" style="margin-bottom:4px">Theo danh mục${sel==="all"?"":" · tháng "+sel.slice(5)}</div><div class="list">${Object.entries(byCat).sort().map(([k,v])=>`<div class="li"><div class="grow">${esc(k)}</div><span class="num">${vnd(v)}</span></div>`).join("")}</div></div>`);
+  // personal / dues
+  const curM=monthKey(new Date().toISOString());
+  if(c.fee>0){
+    const paidIn=(id)=>all.filter(t=>t.type==="in"&&!t.rev&&!t.revOf&&t.mid===id&&t.cat==="Phí thành viên (tháng)"&&t.period===curM).reduce((s,t)=>s+t.amount,0);
+    if(S.isAdmin){const rows=activeMembers().map(m=>({id:m.id,p:paidIn(m.id)}));out.push(`<div class="card"><div class="lbl" style="margin-bottom:4px">Phí tháng ${curM.slice(5)}/${curM.slice(0,4)} · mức ${vnd(c.fee)}</div><div class="list">${rows.map(r=>`<div class="li"><div class="grow ell">${esc(nm(r.id))}</div><span class="num small">${vnd(r.p)}</span><span class="pill ${r.p>=c.fee?"ok":r.p>0?"warn":"bad"}">${r.p>=c.fee?"đủ":r.p>0?"thiếu "+vnd(c.fee-r.p):"chưa đóng"}</span></div>`).join("")||'<div class="empty">Chưa có thành viên.</div>'}</div></div>`)}
+    else if(S.meId){const p=paidIn(S.meId);out.push(`<div class="card"><div class="lbl">Phí tháng ${curM.slice(5)} của anh</div><div class="row" style="margin-top:6px"><span class="num" style="font-size:20px;font-weight:700">${vnd(p)} / ${vnd(c.fee)}</span><span class="sp"></span><span class="pill ${p>=c.fee?"ok":p>0?"warn":"bad"}">${p>=c.fee?"đã đóng đủ":p>0?"thiếu "+vnd(c.fee-p):"chưa đóng"}</span></div></div>`)}
+  }
+  if(S.isAdmin){const fl=fundFlags(all);if(fl.length)out.push(`<div class="card" style="border-color:var(--warn)"><div class="lbl" style="color:var(--warn)">Dữ liệu cần xem lại (${fl.length})</div><div class="list" style="margin-top:6px">${fl.map(f=>`<div class="li small">${esc(f)}</div>`).join("")}</div><p class="tiny muted" style="margin:8px 0 0">App chỉ cảnh báo, không tự sửa. Muốn chỉnh thì đảo bút toán rồi nhập lại.</p></div>`)}
+  out.push(`<div class="card"><div class="row"><div class="lbl">Giao dịch</div><span class="sp"></span>${S.isAdmin?`<button class="btn sm pri" data-a="modal" data-v="tx_in">+ Thu</button><button class="btn sm" data-a="modal" data-v="tx_out">+ Chi</button>`:""}</div>
+   <div class="list" style="margin-top:6px">${inM.length?inM.slice().reverse().map(t=>`<button class="li" style="text-align:left;width:100%" data-a="tx" data-v="${t.id}"><div class="grow ${t.rev?"rev":""}"><div class="ell">${esc(t.cat)}${t.mid?" · "+esc(nm(t.mid)):""}</div><div class="tiny muted">${esc(fmtD(t.date))}${t.note?" · "+esc(t.note):""}</div></div><span class="num ${t.rev?"rev":""}" style="font-weight:700;color:${t.type==="in"?"var(--ok)":"var(--bad)"}">${t.type==="in"?"+":"−"}${vnd(t.amount)}</span></button>`).join(""):`<div class="empty"><h3>Chưa có giao dịch</h3><p>${S.isAdmin?"Bấm + Thu hoặc + Chi để ghi khoản đầu tiên.":"Admin chưa ghi giao dịch nào."}</p></div>`}</div></div>`);
+  return out.join("");
+}
+
+
+function vMe(){
+  if(!S.meId)return `<div class="card">${idPicker()}</div>`;
+  const out=[],m=mem(S.meId)||{},st=stats("quarter")[S.meId]||{pred:0,play:0,w:0,d:0,l:0,fund:0};
+  const ranked=Object.entries(stats("quarter")).filter(([,s])=>s.predN>0).sort((a,b)=>b[1].pred-a[1].pred);const rank=ranked.findIndex(([id])=>id===S.meId)+1;
+  out.push(`<div class="card"><div class="row"><span class="av n" style="width:60px;height:60px;font-size:28px">${esc(m.no||initials(nm(S.meId)))}</span><div style="min-width:0"><h2 style="font-size:22px">${esc(m.name||"")}</h2><div class="muted small">${m.nick?"“"+esc(m.nick)+"” · ":""}${posOf(S.meId).map(p=>POSN[p]).join(" / ")||"Chưa chọn vị trí"}</div></div></div></div>`);
+  out.push(`<div class="card stack"><div class="lbl">Vị trí thi đấu của tôi</div>${posPicker(S.meId)}</div>`);
+  out.push(`<div class="stat4"><div class="s"><b>${st.play}</b>trận đá quý này</div><div class="s"><b>${st.pred||0}</b>điểm đoán${rank?" · hạng "+rank:""}</div><div class="s"><b>${st.w}-${st.d}-${st.l}</b>thắng - hòa - thua</div></div>`);
+  const debts=[];for(const [key,r] of Object.entries(S.rounds)){if(r.shares&&r.shares[S.meId]!=null&&!(r.paid&&r.paid[S.meId])&&r.payer!==S.meId)debts.push({amt:r.shares[S.meId],venue:r.venue})}
+  const curM=monthKey(new Date().toISOString()),c=C();
+  out.push(`<div class="card"><div class="lbl" style="margin-bottom:6px">Của tôi · tiền</div><div class="list"><div class="li"><div class="grow">Đã đóng quỹ (quý này)</div><span class="num" style="font-size:20px">${vnd(st.fund||0)}</span></div>
+   ${c.fee>0?(()=>{const p=fundList().filter(t=>t.type==="in"&&!t.rev&&!t.revOf&&t.mid===S.meId&&t.cat==="Phí thành viên (tháng)"&&t.period===curM).reduce((s,t)=>s+t.amount,0);return `<div class="li"><div class="grow">Phí tháng ${curM.slice(5)}</div><span class="pill ${p>=c.fee?"ok":"bad"}">${p>=c.fee?"đã đóng":"còn thiếu "+vnd(c.fee-p)}</span></div>`})():""}
+   ${debts.map(d=>`<div class="li"><div class="grow">Bill tăng${d.venue?" · "+esc(d.venue):""}</div><span class="num" style="font-size:20px;color:var(--bad)">${vnd(d.amt)}</span></div>`).join("")}${!debts.length?'<div class="li small muted">Không nợ bill nào.</div>':""}</div></div>`);
+  const pr=S.prefs[S.meId]||{};
+  out.push(`<div class="card"><label class="row" style="flex-wrap:nowrap"><input type="checkbox" id="trollOpt" data-a="trollopt" ${pr.troll===false?"":"checked"}><span class="grow">Cho ChuyênBot trêu nhẹ chuyện bóng đá và tăng nhậu</span></label><p class="tiny muted" style="margin:8px 0 0">Bỏ tick là bot không nhắc tên anh khi trêu.</p></div>`);
+  {const ios=/iPhone|iPad|iPod/i.test(navigator.userAgent),st=ios?["Mở link này bằng <b>Safari</b> (không dùng Zalo/Chrome trên iPhone).","Bấm nút <b>Chia sẻ</b> (hình ô vuông có mũi tên lên) ở thanh dưới.","Kéo xuống chọn <b>Thêm vào MH chính</b> → <b>Thêm</b>."]:["Mở link này bằng <b>Chrome</b> (nếu đang mở trong Zalo, bấm ⋮ → Mở bằng trình duyệt).","Bấm <b>⋮</b> góc trên bên phải.","Chọn <b>Thêm vào Màn hình chính</b> (hoặc <b>Cài đặt ứng dụng</b>) → <b>Thêm</b>."];
+  out.push(`<div class="card"><div class="lbl" style="margin-bottom:6px">Cài app lên điện thoại</div><ol class="small" style="margin:0;padding-left:20px;line-height:1.7">${st.map(x=>"<li>"+x+"</li>").join("")}</ol><p class="tiny muted" style="margin:8px 0 0">Xong sẽ có biểu tượng FC Nguyễn Huệ ngoài màn hình, bấm là mở, không cần tìm link trong Zalo.</p></div>`)}
+  out.push(`<button class="btn ghost block" data-a="modal" data-v="iam">Đổi sang người khác</button>`);
+  if(S.user&&S.user.login)out.push(S.isAdmin?`<button class="btn ghost block" data-a="admout">Thoát chế độ admin</button>`:`<button class="btn ghost block" data-a="modal" data-v="adm">Đăng nhập admin</button>`);
+  return `<div class="stack" style="max-width:640px">${out.join("")}</div>`;
+}
+function vAdmin(){
+  const c=C(),ms=Object.entries(S.members).map(([id,m])=>({id,...m})).sort((a,b)=>nm(a.id).localeCompare(nm(b.id),"vi")),n=c.notice||{};
+  return `<div class="cols"><div class="colL"><div class="card stack"><div class="row"><div class="lbl">Thành viên (${ms.length})</div><span class="sp"></span><button class="btn sm pri" data-a="modal" data-v="addMember">+ Thêm</button><button class="btn sm" data-a="modal" data-v="bulk">Dán danh sách</button></div>
+   <div class="list">${ms.length?ms.map(m=>`<button class="li" style="text-align:left;width:100%" data-a="editMember" data-v="${m.id}"><span class="av n">${esc(m.no||initials(nm(m.id)))}</span><div class="grow"><div class="ell">${esc(m.name)}${m.nick?" · "+esc(m.nick):""} ${m.hlv?'<b class="hlv">HLV</b>':""}${m.role?` <span class="pill acc">${esc(m.role)}</span>`:""}${m.cheer?' <span class="pill">cổ vũ</span>':""}</div><div class="tiny muted">${posOf(m.id).join("/")||"chưa có vị trí"}${S.ratings[m.id]?" · trình độ "+S.ratings[m.id].v:""}</div></div>${m.active===false?'<span class="pill">nghỉ</span>':""}</button>`).join(""):'<div class="empty"><h3>Chưa có thành viên</h3><p>Thêm từng người, hoặc dán cả danh sách mỗi dòng một người.</p></div>'}</div></div></div>
+  <div class="colR"><div class="card stack"><div class="row"><div class="lbl">Mã đăng nhập thành viên</div><span class="sp"></span><button class="btn sm" data-a="copycodes">Sao chép</button></div><p class="tiny muted" style="margin:0">Gửi riêng cho từng người, không đăng vào nhóm.</p><div class="list">${ms.map(m=>`<div class="li"><div class="grow ell">${esc(nm(m.id))}</div><b class="num" style="font-size:20px;letter-spacing:2px">${esc((window.__codes||{})[m.id]||"...")}</b></div>`).join("")}</div></div><div class="card stack"><div class="lbl">Thông báo đầu trang</div><textarea id="ntT" maxlength="200" placeholder="vd Anh em nhớ vote trước 18:00 nhé">${esc(n.text||"")}</textarea><div class="row"><button class="btn pri" data-a="saveNotice">Đăng thông báo</button><button class="btn ghost" data-a="clearNotice">Gỡ</button></div></div>
+  <div class="card stack"><div class="lbl">Cấu hình CLB</div>
+   <div class="grid2"><label class="field"><span>Phí tháng (đ)</span><input id="cFee" type="text" inputmode="numeric" value="${c.fee||""}" placeholder="chưa đặt"></label><label class="field"><span>Số người mỗi đội</span><select id="cSize">${[5,7,9,11].map(k=>`<option value="${k}" ${c.teamSize===k?"selected":""}>Sân ${k}</option>`).join("")}</select></label></div>
+   <div class="grid2"><label class="field"><span>Điểm đúng tỷ số</span><input id="cEx" type="number" min="0" value="${c.ptsExact}"></label><label class="field"><span>Điểm đúng kết quả</span><input id="cRs" type="number" min="0" value="${c.ptsResult}"></label></div>
+   <div class="grid2"><label class="field"><span>Điểm mỗi trận có mặt</span><input id="cPp" type="number" min="0" step="0.5" value="${c.ptsPlay}"></label><label class="field"><span>Điểm mỗi bàn thắng</span><input id="cPg" type="number" min="0" step="0.5" value="${c.ptsGoal}"></label><label class="field"><span>Điểm mỗi kiến tạo</span><input id="cPa" type="number" min="0" step="0.5" value="${c.ptsAssist}"></label><label class="field"><span>Điểm mỗi lần MVP</span><input id="cPm" type="number" min="0" step="0.5" value="${c.ptsMvp}"></label></div>
+   <div class="grid2"><label class="field"><span>Tối thiểu mở tăng 2/3</span><input id="cMin" type="number" min="2" value="${c.minPeople}"></label><label class="field"><span>Mức troll của bot</span><select id="cTroll">${[["off","Tắt hẳn"],["light","Nhẹ"],["medium","Vừa"],["spicy","Căng"]].map(([v,l])=>`<option value="${v}" ${c.troll===v?"selected":""}>${l}</option>`).join("")}</select></label></div>
+   <label class="field"><span>Quán quen cho tăng 2/3 (mỗi dòng một quán)</span><textarea id="cVen">${esc((c.venues||[]).join("\n"))}</textarea></label>
+   <button class="btn pri" data-a="saveCfg">Lưu cấu hình</button></div>
+  <button class="btn ghost block" data-a="modal" data-v="newMatch">+ Tạo trận mới</button>
+  <p class="tiny muted" style="margin:0">Quyền quản trị lấy từ mã admin trong sheet "Cai dat".</p></div></div>`;
+}
+function vModal(){
+  const k=S.modal.k,box=(title,inner)=>`<div class="sheet" style="z-index:55"><div class="in"><div class="bar"><button class="btn sm" data-a="mclose" aria-label="Đóng">${ICON.back}</button><b>${title}</b></div><div class="stack">${inner}</div></div></div>`;
+  const c=C();
+  if(k==="inst")return box("Cài app lên điện thoại",instInner());
+  if(k==="adm")return box("Đăng nhập admin",`<div class="card stack"><p class="muted small" style="margin:0">Nhập mã admin (ghi ở sheet "Cai dat", ô B1) để tạo trận, chốt kết quả, nhập quỹ.</p><input id="pinIn" type="password" inputmode="numeric" autocomplete="off" placeholder="Mã admin" style="font-size:18px"><div id="pinErr" class="small" style="color:var(--bad)">${S.pinErr?"Sai mã, thử lại.":""}</div><button class="btn pri" data-a="admlogin">Đăng nhập</button></div>`);
+  if(k==="code")return box("Nhập mã của anh",`<div class="card stack"><p class="muted small" style="margin:0">Đăng nhập là <b style="color:var(--ink)">${esc(S.pendId&&S.members[S.pendId]?nm(S.pendId):"")}</b>. Nhập mã cá nhân admin đã gửi riêng cho anh.</p><input id="codeIn" type="password" inputmode="numeric" autocomplete="off" placeholder="Mã cá nhân" style="font-size:22px;letter-spacing:6px;text-align:center"><div class="small" style="color:var(--bad)">${esc(S.codeErr||"")}</div><button class="btn pri" data-a="codego">Đăng nhập</button><p class="tiny muted" style="margin:0">Chưa có mã hoặc quên mã thì nhắn admin.</p></div>`);
+  if(k==="iam")return box("Anh là ai?",`<div class="card">${idPicker()}</div>`);
+  if(k==="pos")return box("Chọn vị trí thi đấu",`<div class="card stack">${S.meId?`<b>${esc(nm(S.meId))}</b>${posPicker(S.meId)}<button class="btn pri" data-a="mclose">Xong</button>`:""}</div>`);
+  if(k==="newMatch"){return box("Tạo trận mới",`<label class="field"><span>Sân</span><input id="nmV" type="text" list="nmvl" placeholder="vd Sân Hà Nội Green"><datalist id="nmvl">${[...new Set(matchList().map(x=>x.venue))].map(v=>`<option value="${esc(v)}">`).join("")}</datalist></label>
+     <label class="field"><span>Giờ bóng lăn</span><input id="nmK" type="datetime-local"></label>
+     <label class="field"><span>Chốt vote</span><select id="nmD"><option value="prev18">18:00 hôm trước</option><option value="2h">2 giờ trước giờ bóng lăn</option><option value="custom">Tự chọn giờ</option></select></label>
+     <label class="field"><span>Giờ chốt vote (nếu tự chọn)</span><input id="nmC" type="datetime-local"></label><button class="btn pri" data-a="createMatch">Tạo trận</button>`)}
+  if(k==="addMember"||k==="editMember"){
+    const ed=k==="editMember",id=S.modal.id,m=ed?(mem(id)||{}):{},rt=ed?S.ratings[id]:null;
+    return box(ed?"Sửa thành viên":"Thêm thành viên",`<label class="field"><span>Họ tên</span><input id="mName" type="text" value="${esc(m.name||"")}"></label>
+     <div class="grid2"><label class="field"><span>Biệt danh</span><input id="mNick" type="text" value="${esc(m.nick||"")}"></label><label class="field"><span>Số áo</span><input id="mNo" type="number" min="0" value="${esc(m.no||"")}"></label></div>
+     <label class="field"><span>Chức vụ trong nhóm (vd Trưởng nhóm, Phó nhóm)</span><input id="mRole" type="text" value="${esc(m.role||"")}"></label>
+     <label class="field"><span>Số điện thoại</span><input id="mPhone" type="tel" value="${esc(m.phone||"")}"></label>
+     <div class="field"><span>Vị trí sở trường (vị trí đầu là chính)</span><div class="row" style="gap:8px">${POS.map(p=>`<label class="chip"><input type="checkbox" id="mp_${p}" ${posOf(id).includes(p)?"checked":""}> ${p}</label>`).join("")}</div></div>
+     <label class="field"><span>Bot xưng hô (vd anh Đạt, chú Long)</span><input id="mAddr" type="text" value="${esc(m.addr||"")}"></label>
+     <label class="field"><span>Trình độ 1-10 (chỉ admin thấy, dùng chia đội)</span><input id="mRate" type="number" min="1" max="10" step="0.5" value="${rt?rt.v:""}" placeholder="để trống = 5"></label>
+     <label class="row" style="flex-wrap:nowrap"><input type="checkbox" id="mHlv" ${m.hlv?"checked":""}><span>Là HLV</span></label>
+     <label class="row" style="flex-wrap:nowrap"><input type="checkbox" id="mCheer" ${m.cheer?"checked":""}><span>Cổ vũ (không tính vào danh sách chưa vote)</span></label>
+     <label class="row" style="flex-wrap:nowrap"><input type="checkbox" id="mAct" ${m.active===false?"":"checked"}><span>Đang hoạt động</span></label>
+     <button class="btn pri" data-a="saveMember" data-v="${ed?id:""}">Lưu</button>${ed?`<button class="btn bad" data-a="delMember" data-v="${id}">Xóa thành viên</button>`:""}`);}
+  if(k==="bulk")return box("Dán danh sách thành viên",`<p class="muted small" style="margin:0">Mỗi dòng một người: <b>Tên, SĐT, số áo, vị trí</b> (vị trí cách nhau bằng dấu /). Chỉ cần tên là đủ.</p><textarea id="bulkT" style="min-height:180px" placeholder="Nguyễn Văn A, 0901234567, 10, TV/TĐ"></textarea><button class="btn pri" data-a="bulkAdd">Thêm tất cả</button>`);
+  if(k==="tx_in"||k==="tx_out"){const t=k==="tx_in"?"in":"out",cats=t==="in"?c.catIn:c.catOut;
+    return box(t==="in"?"Ghi khoản thu":"Ghi khoản chi",`<label class="field"><span>Số tiền (gõ 200k hoặc 1.5tr cũng được)</span><input id="txA" type="text" inputmode="numeric"></label>
+     <label class="field"><span>Danh mục</span><select id="txC">${cats.map(x=>`<option>${esc(x)}</option>`).join("")}</select></label>
+     <label class="field"><span>Ngày</span><input id="txD" type="datetime-local" value="${toLocalInput(new Date().toISOString())}"></label>
+     ${t==="in"?`<label class="field"><span>Người đóng</span><select id="txM"><option value="">— không gắn người —</option>${activeMembers().map(x=>`<option value="${x.id}">${esc(nm(x.id))}</option>`).join("")}</select></label><label class="field"><span>Kỳ phí (nếu là phí tháng)</span><input id="txP" type="month" value="${monthKey(new Date().toISOString())}"></label>`:""}
+     <label class="field"><span>Ghi chú</span><input id="txN" type="text"></label><button class="btn pri" data-a="saveTx" data-v="${t}">Ghi vào quỹ</button>`);}
+  if(k==="tx"){const t=S.fund[S.modal.id];if(!t)return "";
+    return box("Chi tiết giao dịch",`<div class="card"><div class="row"><span class="pill ${t.type==="in"?"ok":"bad"}">${t.type==="in"?"Thu":"Chi"}</span>${t.rev?'<span class="pill warn">đã bị đảo</span>':""}${t.revOf?'<span class="pill">bút toán đảo</span>':""}</div>
+     <div class="num" style="font-size:40px;margin:8px 0">${t.type==="in"?"+":"−"}${vnd(t.amount)}</div>
+     <div class="list"><div class="li"><div class="grow muted">Danh mục</div>${esc(t.cat)}</div><div class="li"><div class="grow muted">Ngày</div>${esc(fmtDT(t.date))}</div>${t.mid?`<div class="li"><div class="grow muted">Người đóng</div>${esc(nm(t.mid))}</div>`:""}${t.period?`<div class="li"><div class="grow muted">Kỳ phí</div>${esc(t.period)}</div>`:""}${t.note?`<div class="li"><div class="grow muted">Ghi chú</div>${esc(t.note)}</div>`:""}<div class="li"><div class="grow muted">Người ghi</div>${esc(t.by&&mem(t.by)?nm(t.by):"admin")}</div></div></div>
+     ${S.isAdmin&&!t.rev&&!t.revOf?`<button class="btn bad" data-a="reverse" data-v="${S.modal.id}">Đảo bút toán</button><p class="tiny muted" style="margin:0">Giao dịch không bị xóa hay sửa. Đảo sẽ tạo một khoản ngược dấu để số dư luôn truy vết được.</p>`:""}`);}
+  return "";
+}
+/* ---------- chat (ChuyênBot) ---------- */
+function vChat(){
+  return `<div class="sheet"><div class="in" style="display:flex;flex-direction:column;min-height:calc(100% - 8px)"><div class="bar"><button class="btn sm" data-a="close" aria-label="Quay lại">${ICON.back}</button><div><b>ChuyênBot</b><div class="tiny muted">Hỏi lịch trận, vote, đội hình, quỹ, BXH</div></div></div>
+  <div class="stack" style="flex:1;padding-bottom:12px">${S.chat.length?S.chat.map(c=>`<div class="bubble ${c.r==="u"?"u":"b"}">${esc(c.t)||"…"}</div>`).join(""):`<div class="empty"><h3>Em là ChuyênBot</h3><p>Thử hỏi: “Hôm nay có đá không?”, “Em đá đội nào?”, “Số dư quỹ bao nhiêu?”, “Tối nay có tăng không?”</p></div>`}</div>
+  <div class="row" style="flex-wrap:nowrap;position:sticky;bottom:0;padding-block:10px;background:linear-gradient(transparent,var(--bg) 30%)"><input id="chatIn" type="text" maxlength="300" placeholder="Nhắn cho ChuyênBot…" style="flex:1" ${S.chatBusy?"disabled":""}><button class="btn pri" data-a="send" ${S.chatBusy?"disabled":""}>Gửi</button></div></div></div>`;
+}
+function botTools(){
+  const me=S.meId,m=nextMatch(),isA=S.isAdmin;
+  const mi=(id)=>({ten:nm(id),troll_ok:(S.prefs[id]||{}).troll!==false&&mem(id)&&(Date.now()-new Date(mem(id).created||0).getTime())>30*86400e3});
+  return [
+   {name:"tran_sap_toi",description:"Thông tin trận sắp tới: sân, giờ bóng lăn, hạn chốt vote, số người đá/nghỉ/chưa vote, đã khóa vote chưa, người đang hỏi đã vote gì và đá đội nào.",inputSchema:{type:"object",properties:{}},
+    execute:()=>{if(!m)return {co_tran:false};const g=voteGroups(m.id),v=me?voteOf(m.id,me):null;return {co_tran:true,san:m.venue,bong_lan:fmtDT(m.kickoff),han_chot_vote:fmtDT(m.deadline),da_khoa_vote:voteLocked(m),so_da:g.play.length,so_nghi:g.rest.length,so_chua_vote:g.pending.length,toi_da_vote:v?(v.s==="play"?"đá":"nghỉ"):"chưa vote",toi_doi:myTeam(m.id)==="blue"?"Xanh":myTeam(m.id)==="orange"?"Cam":"chưa chia đội"}}},
+   {name:"danh_sach",description:"Danh sách tên người đá, nghỉ, chưa vote của trận sắp tới, và đội hình Xanh/Cam nếu đã chia.",inputSchema:{type:"object",properties:{}},
+    execute:()=>{if(!m)return {co_tran:false};const g=voteGroups(m.id),t=S.teams[m.id];return {da:g.play.map(nm),nghi:g.rest.map(nm),co_vu:g.cheer.map(nm),chua_vote:g.pending.map(nm),doi_xanh:t?t.blue.map(nm):null,doi_cam:t?t.orange.map(nm):null}}},
+   {name:"quy",description:"Số dư quỹ chung (dư hay thiếu) và khoản đã đóng của người đang hỏi. Admin còn xem được ai chưa đóng phí tháng này.",inputSchema:{type:"object",properties:{}},
+    execute:()=>{const all=fundList(),b=bal(all),c=C(),curM=monthKey(new Date().toISOString());const r={so_du:b,ket_luan:b>=0?"dư":"thiếu",tong_thu:all.filter(t=>t.type==="in").reduce((s,t)=>s+t.amount,0),tong_chi:all.filter(t=>t.type==="out").reduce((s,t)=>s+t.amount,0),phi_thang:c.fee||"chưa đặt"};
+     const paid=id=>all.filter(t=>t.type==="in"&&!t.rev&&!t.revOf&&t.mid===id&&t.cat==="Phí thành viên (tháng)"&&t.period===curM).reduce((s,t)=>s+t.amount,0);
+     if(me)r.toi_da_dong_thang_nay=paid(me);if(isA&&c.fee>0)r.chua_dong_thang_nay=activeMembers().filter(x=>paid(x.id)<c.fee).map(x=>({ten:nm(x.id),thieu:c.fee-paid(x.id)}));return r}},
+   {name:"bxh",description:"Bảng xếp hạng quý này. loai: pred (đoán tỷ số), att (chuyên cần), fund (đóng quỹ).",inputSchema:{type:"object",properties:{loai:{type:"string",enum:["pred","att","fund"]}},required:["loai"]},
+    execute:(i)=>{const st=stats("quarter"),k={pred:"pred",att:"play",fund:"fund"}[i.loai]||"pred";const a=Object.entries(st).filter(([,s])=>s[k]>0).sort((x,y)=>y[1][k]-x[1][k]);return {xep_hang:a.slice(0,10).map(([id,s],n)=>({hang:n+1,ten:nm(id),gia_tri:s[k]})),hang_cua_toi:me?(a.findIndex(([id])=>id===me)+1)||null:null}}},
+   {name:"tang",description:"Tình hình vote tăng 2 và tăng 3 của trận gần nhất đã kết thúc: ai đi, ai bùng, quán, mức troll được phép.",inputSchema:{type:"object",properties:{}},
+    execute:()=>{const f=finishedMatches()[0];if(!f)return {co_tran:false};const o={};for(const n of [2,3]){const key=f.id+"_"+n,vs=Object.entries(S.rvotes).filter(([k])=>k.startsWith(key+"__")).map(([k,v])=>({id:k.split("__")[1],...v}));o["tang"+n]={quan:(S.rounds[key]||{}).venue||null,di:vs.filter(v=>v.s==="join").map(v=>({...mi(v.id)})),bung:vs.filter(v=>v.s==="skip").map(v=>({...mi(v.id)}))}}o.muc_troll=C().troll;return o}},
+   {name:"toi_la_ai",description:"Tên và cách xưng hô của người đang hỏi.",inputSchema:{type:"object",properties:{}},execute:()=>({ten:me?nm(me):"khách",xung_ho:me&&mem(me)?mem(me).addr||("anh "+nm(me)):"anh",la_admin:isA})}
+  ];
+}
+async function sendChat(){
+  const inp=document.getElementById("chatIn");const q=(inp&&inp.value||"").trim();if(!q||S.chatBusy||!S.sample)return;
+  if(inp)inp.value="";S.chat.push({r:"u",t:q});const bot={r:"b",t:""};S.chat.push(bot);S.chatBusy=true;render();
+  const lvl=C().troll,hist=S.chat.slice(-9,-2).map(c=>(c.r==="u"?"Người hỏi: ":"ChuyênBot: ")+c.t).join("\n");
+  const prompt=`Bạn là ChuyênBot, trợ lý nội bộ của CLB bóng đá phong trào FC Nguyễn Huệ. Xưng "em", gọi người hỏi theo cách xưng hô lấy từ công cụ toi_la_ai. Tiếng Việt, ngắn gọn (tối đa 4 câu), thân thiện kiểu anh em, emoji nhẹ.
+QUY TẮC: Chỉ trả lời chuyện CLB: lịch trận, vote, đội hình, quỹ, BXH, tăng 2/3. Luôn dùng công cụ để lấy số liệu, không bịa. Không có dữ liệu hoặc không chắc thì nói "Để em hỏi admin lại nhé". Ngoài phạm vi (chính trị, chuyện riêng tư) thì từ chối lịch sự. Chỉ nói về tiền của chính người hỏi, trừ khi công cụ trả về danh sách dành cho admin.
+TROLL (mức hiện tại: ${lvl}): ${lvl==="off"?"tuyệt đối không trêu.":"có thể trêu nhẹ MỘT câu về chuyện bóng đá hoặc bùng tăng, chỉ khi công cụ tang cho troll_ok=true với người đó. Cấm đụng gia đình, công việc, tiền bạc riêng, ngoại hình, sức khỏe. Không trêu admin, người mới, người đã tắt troll. Nợ bill thì chỉ nhắc riêng người đó, không nêu công khai."}
+${hist?"Hội thoại trước:\n"+hist+"\n":""}Câu hỏi mới: ${q}`;
+  try{await S.sample(prompt,{tools:botTools(),cache:false,modelTier:"quick",onText:({text})=>{bot.t=text;render()}});if(!bot.t)bot.t="Để em hỏi admin lại nhé."}
+  catch(e){bot.t=e&&e.code==="not_granted"?"Anh chưa cho phép ChuyênBot hoạt động trên trang này.":e&&e.code==="rate_limited"?"Em đang bị hỏi dồn, đợi chút rồi hỏi lại nhé.":"Em trục trặc rồi, anh hỏi lại giúp em."}
+  S.chatBusy=false;render();
+}
+
+
+/* ---------- team split & analysis ---------- */
+function doSplit(mid){
+  const m=S.matches[mid],size=m.teamSize||C().teamSize,g=voteGroups(mid).play;
+  const rate=id=>(S.ratings[id]&&Number(S.ratings[id].v))||5;
+  const jit=()=>(Math.random()-.5)*.7;
+  let pool=g.map(id=>({id,r:rate(id)+jit(),gk:posOf(id).includes("TM")}));
+  pool.sort((a,b)=>b.r-a.r);
+  const B=[],O=[];let sb=0,so=0;
+  const gks=pool.filter(p=>p.gk);if(gks.length>=2){B.push(gks[0]);sb+=gks[0].r;O.push(gks[1]);so+=gks[1].r;pool=pool.filter(p=>p!==gks[0]&&p!==gks[1])}
+  for(const p of pool){const toB=sb<so||(sb===so&&B.length<=O.length);if(B.length>=Math.ceil(g.length/2)&&!toB&&O.length<Math.floor(g.length/2)){O.push(p);so+=p.r}else if(O.length>=Math.ceil(g.length/2)&&toB){O.push(p);so+=p.r}else if(toB&&B.length<Math.ceil(g.length/2)){B.push(p);sb+=p.r}else{O.push(p);so+=p.r}}
+  const ord=a=>a.sort((x,y)=>y.r-x.r).map(p=>p.id);
+  return {blue:ord(B),orange:ord(O),sumB:B.reduce((s,p)=>s+rate(p.id),0)/Math.max(1,B.length),sumO:O.reduce((s,p)=>s+rate(p.id),0)/Math.max(1,O.length)};
+}
+function probs(t){const rate=id=>(S.ratings[id]&&Number(S.ratings[id].v))||5;const avg=a=>a.reduce((s,id)=>s+rate(id),0)/Math.max(1,a.length);const d=avg(t.blue)-avg(t.orange);const draw=Math.max(12,Math.round(26-Math.min(14,Math.abs(d)*6)));const s=1/(1+Math.exp(-.8*d));const b=Math.round((100-draw)*s);return {pb:b,pd:draw,po:100-draw-b}}
+
+
+/* ---------- export lineup image ---------- */
+async function exportPng(mid){
+  const m=S.matches[mid],tv=teamView(mid);if(!m||!tv)return;
+  if(!S.downloads)return toast("Máy này chưa hỗ trợ tải ảnh");
+  const size=m.teamSize||C().teamSize,cv=document.createElement("canvas"),W=1080,Hh=Math.max(900,420+Math.max(tv.blue.length,tv.orange.length)*64+120);cv.width=W;cv.height=Hh;const x=cv.getContext("2d");
+  const g=x.createLinearGradient(0,0,0,Hh);g.addColorStop(0,"#0C3A63");g.addColorStop(1,"#070B20");x.fillStyle=g;x.fillRect(0,0,W,Hh);
+  try{const src=getComputedStyle(document.documentElement).getPropertyValue("--logo").trim().replace(/^url\(["']?/,"").replace(/["']?\)$/,"");const img=new Image();img.src=src;await img.decode();x.drawImage(img,W/2-70,36,140,153)}catch(e){}
+  x.textAlign="center";x.fillStyle="#fff";x.font="800 54px 'Barlow Condensed',Arial Narrow,sans-serif";x.fillText("ĐỘI HÌNH · FC NGUYỄN HUỆ",W/2,250);
+  x.font="500 28px Arial,sans-serif";x.fillStyle="#A8B2D8";x.fillText(fmtDT(m.kickoff)+" · "+m.venue,W/2,296);
+  [["XANH","#4A9EFF",tv.blue,60],["CAM","#FF8C42",tv.orange,W/2+20]].forEach(([n,col,ids,left])=>{
+    x.textAlign="left";x.fillStyle=col;x.font="800 44px 'Barlow Condensed',Arial Narrow,sans-serif";x.fillText("ĐỘI "+n,left,372);
+    ids.forEach((id,i)=>{const y=426+i*64;x.fillStyle=i<size?"#F5F7FF":"#7d8ab8";x.font="600 30px Arial,sans-serif";const p=posOf(id)[0]||"";x.fillText((i+1)+". "+nm(id),left,y);x.fillStyle="#7FDBFF";x.font="600 22px Arial,sans-serif";x.textAlign="right";x.fillText(p+(i>=size?" · dự bị":""),left+460,y);x.textAlign="left"})});
+  const blob=await new Promise(r=>cv.toBlob(r,"image/png"));
+  try{await S.downloads.save({filename:"doi-hinh-"+fmtD(m.kickoff).replace(/\//g,"-")+".png",data:blob})}catch(e){if(e&&e.code!=="declined")toast("Chưa tải được ảnh")}
+}
+
+async function uploadMedia(el){
+  const files=[...el.files];el.value="";if(!files.length)return;
+  const run=window.__gasRun;let ok=0;
+  for(let i=0;i<files.length;i++){
+    const f=files[i],tag=files.length>1?" ("+(i+1)+"/"+files.length+")":"";
+    const isV=/^video\//.test(f.type),isI=/^image\//.test(f.type);
+    if(!isV&&!isI){toast("Chỉ nhận ảnh hoặc video");continue}
+    if(isV&&f.size>150*1048576){toast("Video quá lớn (tối đa 150MB)");continue}
+    try{
+      let blob=f,name=f.name||"file";
+      if(isI&&f.size>1.2*1048576){try{blob=await shrink(f);name=name.replace(/\.[^.]+$/,"")+".jpg"}catch(x){blob=f}}
+      const mime=blob.type||f.type||"application/octet-stream",total=blob.size,CH=3*1048576;
+      toast("Đang tải lên"+tag+" 0%");
+      const url=await run("upInit",(S.meId?nm(S.meId)+"_":"")+Date.now().toString(36)+"_"+name,mime,total);
+      let id=null;
+      for(let s=0;s<total;s+=CH){
+        const part=blob.slice(s,Math.min(total,s+CH));
+        const b64=await new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(String(r.result).split(",")[1]);r.onerror=rej;r.readAsDataURL(part)});
+        const r=await run("upChunk",url,b64,s,total);
+        if(r&&r.id)id=r.id;
+        toast("Đang tải lên"+tag+" "+Math.min(99,Math.round((s+part.size)*100/total))+"%");
+      }
+      if(!id)throw new Error("noid");
+      await run("upDone",id);
+      const mid="p"+Date.now().toString(36)+uid8();
+      if(await save("media/"+mid,{m:S.mediaMatch||"",fid:id,kind:isV?"video":"image",name,who:S.meId||null,url:"https://drive.google.com/thumbnail?id="+id+"&sz=w600",link:"https://drive.google.com/file/d/"+id+"/view",t:new Date().toISOString()}))ok++;
+    }catch(x){toast("Tải lên thất bại, thử lại nhé")}
+  }
+  if(ok)toast("Đã thêm "+ok+" tệp vào Kỷ niệm");
+}
+function shrink(f){return new Promise((res,rej)=>{const img=new Image(),u=URL.createObjectURL(f);img.onload=()=>{const M=2000,k=Math.min(1,M/Math.max(img.width,img.height)),c=document.createElement("canvas");c.width=Math.round(img.width*k);c.height=Math.round(img.height*k);c.getContext("2d").drawImage(img,0,0,c.width,c.height);URL.revokeObjectURL(u);c.toBlob(b=>b?res(b):rej(),"image/jpeg",.85)};img.onerror=()=>{URL.revokeObjectURL(u);rej()};img.src=u})}
+
+function vConf(mv){const T={play:["ĐÃ XÁC NHẬN: ĐI ĐÁ ⚽","#16c784"],cheer:["ĐÃ XÁC NHẬN: ĐI CỔ VŨ 📣","#22d3ee"],rest:["ĐÃ XÁC NHẬN: NGHỈ TRẬN NÀY","#f5a524"]};const t=mv&&T[mv.s];return t?`<div style="margin-top:10px;padding:14px 10px;border-radius:14px;text-align:center;font-weight:900;font-size:20px;letter-spacing:.3px;line-height:1.25;color:#fff;background:${t[1]}33;border:2px solid ${t[1]}">${t[0]}</div>`:`<div style="margin-top:10px;padding:14px 10px;border-radius:14px;text-align:center;font-weight:900;font-size:18px;color:#ff8a8a;background:#ff4d4d22;border:2px dashed #ff6b6b">CHƯA VOTE — BẤM 1 TRONG 3 NÚT</div>`}
+function isApp(){try{return matchMedia("(display-mode: standalone)").matches||navigator.standalone===true}catch(e){return false}}
+function instInner(){const ios=/iPhone|iPad|iPod/i.test(navigator.userAgent),st=ios?["Mở link này bằng <b>Safari</b> (không dùng Zalo/Chrome trên iPhone).","Bấm nút <b>Chia sẻ</b> (hình ô vuông có mũi tên lên) ở thanh dưới.","Kéo xuống chọn <b>Thêm vào MH chính</b> → <b>Thêm</b>."]:["Mở link này bằng <b>Chrome</b> (nếu đang mở trong Zalo, bấm ⋮ → Mở bằng trình duyệt).","Bấm <b>⋮</b> góc trên bên phải.","Chọn <b>Thêm vào Màn hình chính</b> (hoặc <b>Cài đặt ứng dụng</b>) → <b>Thêm</b>."];return `<div class="card"><ol style="margin:0;padding-left:22px;line-height:1.9;font-size:16px">${st.map(x=>"<li>"+x+"</li>").join("")}</ol><p class="tiny muted" style="margin:10px 0 0">Xong sẽ có biểu tượng FC Nguyễn Huệ ngoài màn hình, bấm là mở, không cần tìm link trong Zalo.</p></div>`}
+/* ---------- events ---------- */
+document.addEventListener("click",async e=>{
+  const el=e.target.closest("[data-a]");if(!el||el.tagName==="SELECT"||el.type==="checkbox"||el.type==="file")return;const a=el.dataset.a,v=el.dataset.v,mid=el.dataset.m;
+  const val=id=>{const x=document.getElementById(id);return x?x.value:""};
+  switch(a){
+  case "page":S.page=v;S.drawer=false;S.modal=null;S.sheet=null;if(v==="week")S.selMatch=null;render();scrollTo(0,0);break;
+  case "drawer":S.drawer=!S.drawer;render();break;
+  case "sel":S.selMatch=v;S.page="week";S.hv=null;render();scrollTo(0,0);break;
+  case "admlogin":{const p=(document.getElementById("pinIn")||{}).value||"";let ok=false;try{ok=await S.user.login(p)}catch(x){}S.pinErr=!ok;if(ok){S.isAdmin=true;S.modal=null;toast("Đã vào chế độ admin")}render();break}
+  case "admout":try{await S.user.logout()}catch(x){}S.isAdmin=false;S.page==="admin"&&(S.page="week");render();break;
+  case "unsel":S.selMatch=null;S.hv=null;render();break;
+  case "vtab":S.vtab=v;render();break;
+  case "truoc":S.truoc=v;render();break;
+  case "iam":{if(S.isAdmin||(window.__tokId&&window.__tokId()===v)){S.meId=v;S.modal=posOf(v).length?null:{k:"pos"};try{await S.db.doc("data/users/"+S.uid+"/me").set({m:v})}catch(x){}}else{S.pendId=v;S.codeErr="";S.modal={k:"code"}}render();break}
+  case "codego":{const c=(document.getElementById("codeIn")||{}).value||"";let r={};try{r=await window.__memLogin(S.pendId,c)}catch(x){}if(r&&r.ok){const v=S.pendId;S.pendId=null;S.meId=v;S.codeErr="";S.modal=posOf(v).length?null:{k:"pos"};try{await S.db.doc("data/users/"+S.uid+"/me").set({m:v})}catch(x){}toast("Đã đăng nhập")}else S.codeErr=r&&r.locked?"Nhập sai nhiều lần, thử lại sau 15 phút hoặc nhắn admin.":"Sai mã, thử lại hoặc nhắn admin xin mã.";render();break}
+  case "copycodes":{const t=Object.keys(S.members).map(id=>nm(id)+": "+((window.__codes||{})[id]||"")).join("\n");try{await navigator.clipboard.writeText(t);toast("Đã sao chép bảng mã")}catch(x){toast("Không sao chép được, chụp màn hình bảng mã nhé")}break}
+  case "switch":window.__memOut&&window.__memOut();S.meId=null;S.modal=null;try{await S.db.doc("data/users/"+S.uid+"/me").delete()}catch(x){}render();break;
+  case "vote":{if(!S.meId)return;const ok=await save("votes/"+mid+"__"+S.meId,{m:mid,p:S.meId,s:v,t:new Date().toISOString()});if(ok)toast(v==="play"?"Đã vote ĐÁ":v==="cheer"?"Đã vote CỔ VŨ":"Đã vote NGHỈ");break}
+  case "proxy":{const who=val("proxyWho");if(who&&await save("votes/"+mid+"__"+who,{m:mid,p:who,s:v,t:new Date().toISOString(),by:"admin"}))toast("Đã vote hộ "+nm(who));break}
+  case "setpos":{if(!S.meId)return;let cur=posOf(S.meId).slice();if(cur.includes(v))cur=cur.filter(x=>x!==v);else{cur.push(v);if(cur.length>2)cur=[cur[0],v]}await save("mypos/"+S.meId,{pos:cur,t:new Date().toISOString()});break}
+  case "tn":S.tn=Number(v);render();break;
+  case "modal":S.modal={k:v};render();break;
+  case "mclose":S.modal=null;render();break;
+  case "editMember":S.modal={k:"editMember",id:v};render();break;
+  case "tx":S.modal={k:"tx",id:v};render();break;
+  case "bxt":S.bxhTab=v;render();break;
+  case "chat":S.sheet={kind:"chat"};render();setTimeout(()=>{const i=document.getElementById("chatIn");i&&i.focus()},50);break;
+  case "close":S.sheet=null;render();break;
+  case "send":sendChat();break;
+  case "png":exportPng(mid);break;
+  case "createMatch":{const venue=val("nmV").trim(),k=fromLocal(val("nmK"));if(!venue||!k)return toast("Nhập sân và giờ bóng lăn");
+    const kd=new Date(k);let dl;const mode=val("nmD");if(mode==="2h")dl=new Date(kd.getTime()-2*3600e3).toISOString();else if(mode==="custom"){dl=fromLocal(val("nmC"));if(!dl)return toast("Chọn giờ chốt vote")}else{const b=bk(k);dl=new Date(Date.UTC(b.getUTCFullYear(),b.getUTCMonth(),b.getUTCDate()-1,18,0)-TZ).toISOString()}
+    const id="m"+Date.now().toString(36);if(await save("matches/"+id,{venue,kickoff:k,deadline:dl,status:"open",teamSize:C().teamSize,created:new Date().toISOString()})){S.modal=null;S.page="week";S.selMatch=null;toast("Đã tạo trận")}break}
+  case "finish":{const b=val("rsB"),o=val("rsO");if(b===""||o==="")return toast("Nhập đủ tỷ số hai đội");if(await save("matches/"+mid,{status:"finished",sb:Number(b),so:Number(o),notes:val("rsN").trim()},true))toast("Đã chốt kết quả");break}
+  case "reopen":{if(await save("matches/"+mid,{status:"open",sb:null,so:null},true))toast("Đã mở lại");break}
+  case "cancelMatch":{if(await save("matches/"+mid,{status:"cancelled"},true))toast("Đã hủy trận");break}
+  case "split":{const r=doSplit(mid),old=S.teams[mid];const hist=((old&&old.hist)||[]).concat(old?[{n:old.n||1,blue:old.blue,orange:old.orange}]:[]).slice(-12);const ok=await save("teams/"+mid,{blue:r.blue,orange:r.orange,n:((old&&old.n)||0)+1,hist,t:new Date().toISOString()});if(ok){S.hv=null;toast("Đã chia đội lần "+(((old&&old.n)||0)+1))}break}
+  case "swap":{const t=S.teams[mid];if(!t)return;const from=el.dataset.c,to=from==="blue"?"orange":"blue";const nt={blue:t.blue.slice(),orange:t.orange.slice(),n:t.n||1,hist:t.hist||[],t:t.t};nt[from]=nt[from].filter(x=>x!==v);nt[to].push(v);await save("teams/"+mid,nt);break}
+  case "analyze":{const t=S.teams[mid];if(!t||!S.sample)return;const p=probs(t);toast("Đang viết nhận định…");
+    const recent=finishedMatches().slice(0,5).map(f=>`${fmtD(f.kickoff)}: Xanh ${f.sb}-${f.so} Cam`).join("; ")||"chưa có trận trước";
+    const desc=side=>t[side].map(id=>nm(id)+"("+(posOf(id)[0]||"?")+")").join(", ");
+    try{const r=await S.sample(`Viết nhận định 80-120 từ bằng tiếng Việt, giọng bình luận viên phong trào vui vẻ, cho trận của CLB FC Nguyễn Huệ chia hai đội Xanh và Cam.\nĐội Xanh: ${desc("blue")}\nĐội Cam: ${desc("orange")}\nTỷ lệ tính từ chỉ số nội bộ: Xanh ${p.pb}%, Hòa ${p.pd}%, Cam ${p.po}%.\nKết quả các trận trước (tất cả cầu thủ): ${recent}.\nChỉ dùng dữ liệu trên, không bịa thành tích hay chuyện riêng của ai. Không nhắc đến chỉ số trình độ. Chỉ trả về đoạn văn.`,{modelTier:"quick",cache:false});
+      await save("analysis/"+mid,{text:r.text.trim(),pb:p.pb,pd:p.pd,po:p.po,t:new Date().toISOString()});toast("Đã có nhận định")}catch(x){toast("Chưa tạo được nhận định")}break}
+  case "pred":{const b=val("pB"),o=val("pO");if(b===""||o==="")return toast("Nhập tỷ số hai đội");if(await save("pred/"+mid+"__"+S.meId,{b:Math.max(0,Math.floor(+b)),o:Math.max(0,Math.floor(+o)),t:new Date().toISOString()}))toast("Đã chốt dự đoán");break}
+  case "cmt":{const tx=val("cmt").trim();if(!tx||!S.meId)return;const id="c"+Date.now().toString(36)+uid8();const i=document.getElementById("cmt");if(i)i.value="";await save("comments/"+id,{m:mid,who:S.meId,text:tx,t:new Date().toISOString()});break}
+  case "savePs":{const t=S.teams[mid],ids=t?[...t.blue,...t.orange]:voteGroups(mid).play,g={},a={};ids.forEach(id=>{const x=Math.max(0,Math.floor(+val("psg_"+id)||0)),y=Math.max(0,Math.floor(+val("psa_"+id)||0));if(x)g[id]=x;if(y)a[id]=y});if(await save("pstats/"+mid,{g,a,mvp:val("psm")||null,t:new Date().toISOString()}))toast("Đã lưu số liệu cầu thủ");break}
+  case "delc":await del("comments/"+v);break;
+  case "rvote":{if(!S.meId)return;await save("rvotes/"+el.dataset.k+"__"+S.meId,{s:v,t:new Date().toISOString()});break}
+  case "bill":{const key=el.dataset.k,venue=val("rVenue").trim(),total=parseMoney(val("rTotal")),payer=val("rPayer");
+    const joins=Object.entries(S.rvotes).filter(([k,x])=>k.startsWith(key+"__")&&x.s==="join").map(([k])=>k.split("__")[1]);
+    const went=joins.filter(id=>{const c=document.getElementById("went_"+id);return c?c.checked:true});
+    for(const id of joins){const c=document.getElementById("went_"+id);if(c&&S.rvotes[key+"__"+id].went!==c.checked)await save("rvotes/"+key+"__"+id,{went:c.checked},true)}
+    const data={venue};if(total&&went.length){const each=Math.round(total/went.length/1000)*1000||Math.round(total/went.length);const sh={};went.forEach(id=>sh[id]=each);data.total=total;data.shares=sh;data.payer=payer||null;data.paid=(S.rounds[key]||{}).paid||{};if(payer)data.paid[payer]=true}
+    if(await save("rounds/"+key,data))toast(total?"Đã chia bill":"Đã lưu quán");break}
+  case "paid":{const key=el.dataset.k,r=S.rounds[key]||{},paid=Object.assign({},r.paid||{});paid[v]=!paid[v];await save("rounds/"+key,{paid},true);break}
+  case "saveTx":{const amt=parseMoney(val("txA"));if(!amt)return toast("Nhập số tiền hợp lệ");const d=fromLocal(val("txD"))||new Date().toISOString();const cat=val("txC");const mid2=val("txM")||null;const period=(cat==="Phí thành viên (tháng)")?val("txP"):null;
+    const id="t"+Date.now().toString(36)+uid8();if(await save("fund/"+id,{type:v,amount:amt,cat,date:d,mid:mid2,period,note:val("txN").trim(),by:S.meId||null,created:new Date().toISOString()})){S.modal=null;toast("Đã ghi vào quỹ")}break}
+  case "reverse":{const t=S.fund[v];if(!t)return;const id="t"+Date.now().toString(36)+uid8();const ok=await save("fund/"+id,{type:t.type==="in"?"out":"in",amount:t.amount,cat:t.cat,date:new Date().toISOString(),mid:t.mid||null,period:t.period||null,note:"Đảo bút toán: "+(t.note||t.cat),revOf:v,by:S.meId||null,created:new Date().toISOString()});if(ok){await save("fund/"+v,{rev:id},true);S.modal=null;toast("Đã đảo bút toán")}break}
+  case "saveMember":{const name=val("mName").trim();if(!name)return toast("Nhập họ tên");const pos=POS.filter(p=>document.getElementById("mp_"+p).checked).slice(0,3);const id=v||"u"+Date.now().toString(36)+uid8();const old=S.members[id]||{};
+    const ok=await save("members/"+id,{name,nick:val("mNick").trim(),no:val("mNo").trim(),phone:val("mPhone").trim(),pos,addr:val("mAddr").trim(),hlv:document.getElementById("mHlv").checked,cheer:document.getElementById("mCheer").checked,role:val("mRole").trim(),note:old.note||"",active:document.getElementById("mAct").checked,created:old.created||new Date().toISOString()});
+    const rv=parseFloat(val("mRate"));if(ok){if(pos.length)await save("mypos/"+id,{pos,t:new Date().toISOString()});if(rv>0)await save("ratings/"+id,{v:Math.min(10,rv)});else if(S.ratings[id])await del("ratings/"+id);S.modal=null;toast("Đã lưu")}break}
+  case "delMember":{if(await del("members/"+v)){S.modal=null;toast("Đã xóa")}break}
+  case "bulkAdd":{const lines=val("bulkT").split("\n").map(s=>s.trim()).filter(Boolean);let n=0;for(const ln of lines){const p=ln.split(",").map(s=>s.trim());if(!p[0])continue;const pos=(p[3]||"").toUpperCase().split(/[\/\s]+/).filter(x=>POS.includes(x));const id="u"+Date.now().toString(36)+uid8();if(await save("members/"+id,{name:p[0],nick:"",no:p[2]||"",phone:p[1]||"",pos,addr:"",active:true,created:new Date().toISOString()}))n++}S.modal=null;toast("Đã thêm "+n+" thành viên");break}
+  case "saveCfg":{const data={fee:parseMoney(val("cFee"))||0,teamSize:Number(val("cSize")),ptsExact:Number(val("cEx")),ptsResult:Number(val("cRs")),ptsPlay:Number(val("cPp"))||0,ptsGoal:Number(val("cPg"))||0,ptsAssist:Number(val("cPa"))||0,ptsMvp:Number(val("cPm"))||0,minPeople:Number(val("cMin"))||6,troll:val("cTroll"),venues:val("cVen").split("\n").map(s=>s.trim()).filter(Boolean)};if(await save("cfg/club",Object.assign({},S.cfg,data)))toast("Đã lưu cấu hình");break}
+  case "saveNotice":{const tx=val("ntT").trim();if(!tx)return toast("Nhập nội dung thông báo");if(await save("cfg/club",Object.assign({},S.cfg,{notice:{text:tx,by:S.meId?nm(S.meId):"Admin",t:new Date().toISOString()}})))toast("Đã đăng thông báo");break}
+  case "clearNotice":{const c2=Object.assign({},S.cfg);delete c2.notice;if(await save("cfg/club",c2))toast("Đã gỡ thông báo");break}
+  case "fb":{const tx=val("fbT").trim();if(!tx)return toast("Nhập góp ý trước nhé");const id="f"+Date.now().toString(36)+uid8();if(await save("feedback/"+id,{text:tx,who:S.meId||null,t:new Date().toISOString()})){const i=document.getElementById("fbT");if(i)i.value="";toast("Cảm ơn anh đã góp ý")}break}
+  case "delmedia":await del("media/"+v);break;
+  case "delfb":await del("feedback/"+v);break;
+  }
+});
+document.addEventListener("change",async e=>{
+  const el=e.target;if(!el.dataset||!el.dataset.a)return;const a=el.dataset.a;
+  if(a==="per"){S.bxhPeriod=el.value;render()}
+  else if(a==="fm"){S.fundMonth=el.value;render()}
+  else if(a==="hv"){S.hv=el.value?{m:el.dataset.m,n:Number(el.value)}:null;render()}
+  else if(a==="mm"){S.mediaMatch=el.value;render()}
+  else if(a==="trollopt"&&S.meId){await save("prefs/"+S.meId,{troll:el.checked});toast(el.checked?"Bot được trêu nhẹ anh":"Bot sẽ không nhắc tên anh khi trêu")}
+  else if(a==="upload2"&&window.__GAS){await uploadMedia(el)}
+  else if(a==="upload"&&S.assets){
+    if(!S.mediaMatch){el.value="";return toast("Chọn trận ở ô bên trái trước khi thêm ảnh")}
+    let n=0;for(const f of [...el.files]){try{const r=await S.assets.upload(f);const id="p"+Date.now().toString(36)+uid8();if(await save("media/"+id,{m:S.mediaMatch,asset:r.id,url:r.url,t:new Date().toISOString()}))n++}catch(x){toast("Ảnh quá lớn hoặc sai định dạng")}}
+    el.value="";if(n)toast("Đã thêm "+n+" ảnh");
+  }
+});
+document.addEventListener("keydown",e=>{if(e.key==="Enter"&&e.target.id==="chatIn")sendChat();if(e.key==="Enter"&&e.target.id==="cmt"){const b=document.querySelector('[data-a="cmt"]');b&&b.click()}});
+
+/* ---------- boot ---------- */
+async function boot(){
+  try{S.db=await claude.use("db");S.user=await claude.use("user");S.sample=await claude.use("sample");S.assets=await claude.use("assets");S.downloads=await claude.use("downloads")}catch(e){}
+  if(!S.db){$app.innerHTML='<div style="text-align:center;padding:24vh 20px;color:#A8B2D8"><h3 style="color:#F5F7FF">Cần đăng nhập</h3><p>Anh đăng nhập claude.ai và mở lại trang này để dùng app FC Nguyễn Huệ.</p></div>';return}
+  try{S.uid=S.user?await S.user.id():null;S.isAdmin=S.user?await S.user.canEdit():false;S.canWrite=S.user?await S.user.can("data.write"):null}catch(e){}
+  const sub=(name,key)=>S.db.collection(name).onSnapshot(s=>{const o={};s.docs.forEach(d=>{o[d.id]=d.data()});S[key]=o;render()},()=>{});
+  ["members","matches","votes","pred","comments","teams","fund","rvotes","rounds","ratings","analysis","prefs","media","feedback","pstats","mypos"].forEach(n=>sub(n,n));
+  S.db.doc("cfg/club").onSnapshot(d=>{S.cfg=d.exists?d.data():{};render()},()=>{});
+  if(S.uid){try{const me=await S.db.doc("data/users/"+S.uid+"/me").get();if(me.exists)S.meId=me.data().m}catch(e){}}
+  if(S.meId&&!S.isAdmin&&window.__memCheck){try{const ok=await window.__memCheck();if(!ok||window.__tokId()!==S.meId)S.meId=null}catch(e){}}
+  S.loaded=true;render();
+}
+boot();
+})();
+</script>
+<script>window.__ip=null;window.addEventListener("beforeinstallprompt",function(e){e.preventDefault();window.__ip=e});window.addEventListener("appinstalled",function(){window.__ip=null});document.addEventListener("click",function(ev){var t=ev.target&&ev.target.closest&&ev.target.closest('[data-v="inst"]');if(t&&window.__ip){ev.preventDefault();ev.stopImmediatePropagation();var p=window.__ip;window.__ip=null;p.prompt()}},true);</script>
+<script>if("serviceWorker"in navigator)navigator.serviceWorker.register("sw.js").catch(function(){});</script>
