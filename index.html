@@ -249,15 +249,31 @@ textarea{resize:vertical;min-height:84px}
 /* social feed */
 .post-card{background:var(--card);border-radius:18px;padding:16px;margin-bottom:14px;box-shadow:var(--shadow)}
 .post-head{display:flex;align-items:center;gap:10px;margin-bottom:10px}
-.post-av{width:36px;height:36px;border-radius:50%;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex:none}
+.post-av{width:40px;height:40px;border-radius:50%;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;flex:none}
 .post-meta .pname{font-weight:700;font-size:14px;line-height:1.2}.post-meta .ptime{font-size:12px;color:var(--muted)}
-.post-body{font-size:14px;line-height:1.6;margin-bottom:10px;white-space:pre-wrap;word-break:break-word}
-.post-imgs{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px;margin-bottom:10px;border-radius:12px;overflow:hidden}
-.post-imgs img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:10px;cursor:pointer}
-.post-imgs video{width:100%;border-radius:10px;max-height:400px;background:#000}
-.post-actions{display:flex;gap:16px;padding:8px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line);margin-bottom:10px}
-.post-actions button{display:flex;align-items:center;gap:6px;font-size:13px;font-weight:600;color:var(--muted);padding:6px 10px;border-radius:10px}
-.post-actions button:hover,.post-actions button.liked{color:var(--accent)}
+.post-body{font-size:15px;line-height:1.65;margin-bottom:10px;white-space:pre-wrap;word-break:break-word}
+/* Facebook-style image grid for posts */
+.post-imgs{display:grid;gap:3px;margin-bottom:10px;border-radius:12px;overflow:hidden}
+.post-imgs.g1{grid-template-columns:1fr}
+.post-imgs.g2{grid-template-columns:1fr 1fr}
+.post-imgs.g3{grid-template-columns:2fr 1fr;grid-template-rows:1fr 1fr}
+.post-imgs.g3 .pi:first-child{grid-row:1/3}
+.post-imgs.g4{grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr}
+.post-imgs.g5{grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr}
+.post-imgs.g5 .pi:first-child,.post-imgs.g5 .pi:nth-child(2){grid-column:span 1}
+.pi{position:relative;overflow:hidden;cursor:pointer;background:#000;min-height:0}
+.pi img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .2s}
+.pi:active img{transform:scale(1.02)}
+.pi video{width:100%;height:100%;object-fit:cover;display:block}
+.pi .vplay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center}
+.pi .vplay span{width:52px;height:52px;background:rgba(0,0,0,.6);border-radius:50%;display:flex;align-items:center;justify-content:center}
+.pi .vplay span::after{content:"";border-style:solid;border-width:10px 0 10px 18px;border-color:transparent transparent transparent #fff;margin-left:3px}
+.pi .more-overlay{position:absolute;inset:0;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;color:#fff;font-size:32px;font-weight:700}
+.post-actions{display:flex;gap:0;padding:0;border-top:1px solid var(--line);margin-bottom:8px}
+.post-actions button{flex:1;display:flex;align-items:center;justify-content:center;gap:6px;font-size:13px;font-weight:600;color:var(--muted);padding:10px 10px;border-radius:0;transition:background .15s}
+.post-actions button:active{background:rgba(0,0,0,.05)}
+.post-actions button.liked{color:#e53935}
+.post-actions button .act-ico{width:20px;height:20px;flex:none}
 .pcmt-list{padding:0;margin:0}
 .pcmt-item{display:flex;gap:8px;padding:8px 0}
 .pcmt-av{width:28px;height:28px;border-radius:50%;background:rgba(46,125,50,.12);color:var(--accent);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:10px;flex:none}
@@ -265,17 +281,51 @@ textarea{resize:vertical;min-height:84px}
 .pcmt-bubble .cn{font-weight:700;font-size:13px}.pcmt-bubble .ct{font-size:13px;white-space:pre-wrap;word-break:break-word}.pcmt-bubble .ctime{font-size:11px;color:var(--muted);margin-top:2px}
 .post-cmt-row{display:flex;gap:8px;align-items:center;margin-top:6px}
 .post-cmt-row input{flex:1;border:1px solid var(--line);border-radius:999px;padding:8px 14px;font-size:13px;background:var(--soft)}
+/* Compose box — Facebook style */
 .post-compose{background:var(--card);border-radius:18px;padding:16px;margin-bottom:14px;box-shadow:var(--shadow)}
-.post-compose textarea{width:100%;border:1px solid var(--line);border-radius:14px;padding:10px 14px;font-size:14px;resize:vertical;min-height:60px;background:var(--soft)}
-.post-compose .prow{display:flex;gap:8px;align-items:center;margin-top:10px;flex-wrap:wrap}
-.post-compose .img-prev{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
-.post-compose .img-prev .thumb{position:relative;width:80px;height:80px;border-radius:10px;overflow:hidden;flex:none}
-.post-compose .img-prev .thumb img,.post-compose .img-prev .thumb video{width:100%;height:100%;object-fit:cover}
-.post-compose .img-prev .thumb .rm{position:absolute;top:2px;right:2px;width:22px;height:22px;border-radius:50%;background:rgba(0,0,0,.6);color:#fff;font-size:14px;display:flex;align-items:center;justify-content:center;cursor:pointer;border:none;padding:0}
-.post-compose .img-prev .thumb .vid-badge{position:absolute;bottom:4px;left:4px;background:rgba(0,0,0,.6);color:#fff;font-size:10px;padding:1px 5px;border-radius:4px}
-.post-compose .attach-row{display:flex;gap:8px;align-items:center;margin-top:10px}
-.post-compose .attach-btn{display:flex;align-items:center;gap:5px;padding:8px 14px;border-radius:12px;font-size:13px;font-weight:600;color:var(--accent);background:rgba(46,125,50,.08);cursor:pointer;border:1px solid rgba(46,125,50,.15)}
-.post-compose .attach-btn:active{background:rgba(46,125,50,.16)}
+.post-compose textarea{width:100%;border:none;border-radius:0;padding:8px 0;font-size:15px;resize:none;min-height:44px;background:transparent;outline:none;transition:min-height .2s}
+.post-compose textarea:focus{min-height:80px}
+.post-compose .compose-divider{height:1px;background:var(--line);margin:8px 0}
+.post-compose .img-prev{display:grid;gap:4px;margin-top:10px;border-radius:12px;overflow:hidden;position:relative}
+.post-compose .img-prev.p1{grid-template-columns:1fr}
+.post-compose .img-prev.p2{grid-template-columns:1fr 1fr}
+.post-compose .img-prev.p3{grid-template-columns:2fr 1fr;grid-template-rows:1fr 1fr}
+.post-compose .img-prev.p3 .thumb:first-child{grid-row:1/3}
+.post-compose .img-prev.p4{grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr}
+.post-compose .img-prev .thumb{position:relative;overflow:hidden;min-height:80px;max-height:260px}
+.post-compose .img-prev.p1 .thumb{max-height:300px}
+.post-compose .img-prev .thumb img,.post-compose .img-prev .thumb video{width:100%;height:100%;object-fit:cover;display:block}
+.post-compose .img-prev .thumb .rm{position:absolute;top:6px;right:6px;width:28px;height:28px;border-radius:50%;background:rgba(0,0,0,.7);color:#fff;font-size:16px;display:flex;align-items:center;justify-content:center;cursor:pointer;border:none;padding:0;z-index:2;backdrop-filter:blur(4px)}
+.post-compose .img-prev .thumb .rm:active{transform:scale(.9)}
+.post-compose .img-prev .thumb .vid-badge{position:absolute;bottom:8px;left:8px;background:rgba(0,0,0,.7);color:#fff;font-size:11px;padding:3px 8px;border-radius:8px;display:flex;align-items:center;gap:4px;backdrop-filter:blur(4px)}
+/* action bar */
+.post-compose .attach-row{display:flex;gap:4px;align-items:center;margin-top:10px;padding-top:10px;border-top:1px solid var(--line)}
+.post-compose .media-btn{display:flex;align-items:center;justify-content:center;gap:6px;padding:10px 14px;border-radius:12px;font-size:13px;font-weight:600;color:var(--accent);background:transparent;cursor:pointer;border:none;-webkit-tap-highlight-color:transparent;touch-action:manipulation;user-select:none}
+.post-compose .media-btn:active{background:rgba(46,125,50,.12);transform:scale(.96)}
+.post-compose .media-btn svg{width:24px;height:24px;flex:none}
+.post-compose .cam-btn{display:flex;align-items:center;justify-content:center;padding:10px;border-radius:12px;color:var(--accent);background:transparent;cursor:pointer;border:none;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+.post-compose .cam-btn:active{background:rgba(46,125,50,.12);transform:scale(.96)}
+.post-compose .cam-btn svg{width:24px;height:24px}
+.post-compose .img-count{font-size:12px;color:var(--muted);padding:0 6px}
+.post-compose .post-btn{margin-left:auto;padding:10px 22px;border-radius:999px;font-size:14px;font-weight:700}
+/* upload progress bar */
+.upload-bar{position:relative;height:4px;background:rgba(46,125,50,.12);border-radius:2px;margin-top:10px;overflow:hidden}
+.upload-bar .fill{position:absolute;left:0;top:0;bottom:0;background:var(--accent);border-radius:2px;transition:width .3s;width:0}
+.upload-status{display:flex;align-items:center;gap:8px;margin-top:6px;font-size:12px;color:var(--muted)}
+.upload-status .spinner{width:14px;height:14px;border:2px solid var(--line);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+/* lightbox */
+.lightbox{position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.95);display:flex;flex-direction:column;align-items:center;justify-content:center;animation:fadeIn .2s}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.lightbox .lb-close{position:absolute;top:12px;right:12px;width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,.15);color:#fff;font-size:24px;display:flex;align-items:center;justify-content:center;cursor:pointer;border:none;z-index:3;backdrop-filter:blur(4px)}
+.lightbox .lb-close:active{background:rgba(255,255,255,.3)}
+.lightbox .lb-img{max-width:95vw;max-height:85vh;object-fit:contain;border-radius:4px;user-select:none}
+.lightbox video{max-width:95vw;max-height:85vh;border-radius:4px}
+.lightbox .lb-nav{position:absolute;top:50%;transform:translateY(-50%);width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,.15);color:#fff;font-size:22px;display:flex;align-items:center;justify-content:center;cursor:pointer;border:none;backdrop-filter:blur(4px)}
+.lightbox .lb-nav:active{background:rgba(255,255,255,.3)}
+.lightbox .lb-prev{left:10px}
+.lightbox .lb-next{right:10px}
+.lightbox .lb-counter{position:absolute;bottom:16px;color:rgba(255,255,255,.7);font-size:13px;font-weight:600}
 @media(prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 
@@ -332,7 +382,7 @@ const DEF_CFG={pPlay:2,pOnTime:1,pGoalTD:1,pGoalTV:2,pGoalHV:3,pGoalTM:5,pHat:2,
 
 /* ---------- state ---------- */
 const S={db:null,user:null,sample:null,assets:null,downloads:null,uid:null,isAdmin:false,canWrite:null,
- members:{},matches:{},votes:{},pred:{},comments:{},teams:{},fund:{},rvotes:{},rounds:{},ratings:{},analysis:{},prefs:{},media:{},feedback:{},pstats:{},mypos:{},news:{},posts:{},pcmts:{},cfg:{},_postImgs:[],
+ members:{},matches:{},votes:{},pred:{},comments:{},teams:{},fund:{},rvotes:{},rounds:{},ratings:{},analysis:{},prefs:{},media:{},feedback:{},pstats:{},mypos:{},news:{},posts:{},pcmts:{},cfg:{},_postImgs:[],_uploading:false,_uploadPct:0,_uploadCur:0,_uploadTotal:0,
  meId:null,page:"week",selMatch:null,vtab:"play",truoc:"ai",hv:null,tn:2,drawer:false,sheet:null,modal:null,bxhTab:"tot",bxhPeriod:"quarter",fundMonth:"all",mediaMatch:"",newsTag:"Tất cả",resultMatch:null,chat:[],chatBusy:false,toast:"",loaded:false};
 const C=()=>Object.assign({},DEF_CFG,S.cfg||{});
 /* ---------- derived ---------- */
@@ -357,7 +407,7 @@ const teamSizeLabel=n=>({5:"1-2-2",7:"1-2-3-1",9:"1-3-3-2",11:"1-4-4-2"}[n]||"")
 const curMatch=()=>(S.selMatch&&S.matches[S.selMatch]?{id:S.selMatch,...S.matches[S.selMatch]}:null)||nextMatch()||finishedMatches()[0]||null;
 /* ---------- db writes ---------- */
 const col=n=>S.db.collection(n);
-async function save(path,data,merge){try{const r=S.db.doc(path);if(merge)await r.update(data);else await r.set(data);return true}catch(e){toast(e&&e.code==="invalid_argument"?"Anh chưa có quyền ghi mục này":"Chưa lưu được, thử lại nhé");return false}}
+async function save(path,data,merge){try{const r=S.db.doc(path);if(merge)await r.update(data);else await r.set(data);return true}catch(e){const msg=e&&e.code==="invalid_argument"?"Dữ liệu quá lớn, thử giảm số ảnh/video":e&&e.code==="permission_denied"?"Chưa lưu được, thử chọn lại tên":"Chưa lưu được, thử lại nhé";toast(msg);return false}}
 async function del(path){try{await S.db.doc(path).delete();return true}catch(e){toast("Chưa xóa được");return false}}
 let toastT;function toast(t){S.toast=t;render();clearTimeout(toastT);toastT=setTimeout(()=>{S.toast="";render()},2600)}
 
@@ -595,14 +645,20 @@ function vMemo(){
 
   /* compose box — any logged-in member */
   const prevImgs=(S._postImgs||[]);
+  const pCls=prevImgs.length===1?'p1':prevImgs.length===2?'p2':prevImgs.length===3?'p3':'p4';
   const compose=S.meId?`<div class="post-compose">
-    <div class="post-head"><span class="post-av">${esc(initials(nm(S.meId)))}</span><b style="font-size:14px">${esc(nm(S.meId))}</b></div>
-    <textarea id="postTxt" placeholder="Chia sẻ khoảnh khắc, cảm xúc về trận đấu…" rows="3"></textarea>
-    ${prevImgs.length?`<div class="img-prev">${prevImgs.map((im,i)=>{const src=typeof im==='string'?im:im.data;const isV=typeof im==='object'&&im.isVid;return `<div class="thumb">${isV?`<video src="${esc(src)}" muted></video><span class="vid-badge">▶</span>`:`<img src="${esc(src)}" alt="">`}<button class="rm" data-a="rmpostimg" data-v="${i}">✕</button></div>`}).join("")}</div>`:""}
+    <div class="post-head"><span class="post-av">${esc(initials(nm(S.meId)))}</span><b style="font-size:15px">${esc(nm(S.meId))}</b></div>
+    <textarea id="postTxt" placeholder="Bạn đang nghĩ gì? Chia sẻ khoảnh khắc trận đấu…"></textarea>
+    ${prevImgs.length?`<div class="img-prev ${pCls}">${prevImgs.slice(0,10).map((im,i)=>{const src=typeof im==='string'?im:im.data;const isV=typeof im==='object'&&im.isVid;return `<div class="thumb">${isV?`<video src="${esc(src)}" muted playsinline></video><span class="vid-badge"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><polygon points="5,3 19,12 5,21"/></svg> Video</span>`:`<img src="${esc(src)}" alt="">`}<button class="rm" data-a="rmpostimg" data-v="${i}">✕</button></div>`}).join("")}</div>`:""}
+    ${S._uploading?`<div class="upload-bar"><div class="fill" style="width:${S._uploadPct||0}%"></div></div><div class="upload-status"><span class="spinner"></span>Đang upload ${S._uploadCur||0}/${S._uploadTotal||0}…</div>`:``}
+    <input id="postFiles" type="file" accept="image/*,video/*" multiple data-a="addpostimg" style="position:absolute;width:1px;height:1px;opacity:0;overflow:hidden;clip:rect(0,0,0,0)">
+    <input id="camCapture" type="file" accept="image/*,video/*" capture="environment" data-a="addpostimg" style="position:absolute;width:1px;height:1px;opacity:0;overflow:hidden;clip:rect(0,0,0,0)">
     <div class="attach-row">
-      <label class="attach-btn" style="cursor:pointer">📷 Ảnh / Video<input id="postFiles" type="file" accept="image/*,video/*" multiple hidden data-a="addpostimg"></label>
+      <button type="button" class="media-btn" data-a="openmedia"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg> Ảnh/Video</button>
+      <button type="button" class="cam-btn" data-a="opencam" title="Chụp ảnh / Quay video"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg></button>
+      ${prevImgs.length?`<span class="img-count">${prevImgs.length}/10</span>`:""}
       <span style="flex:1"></span>
-      <button class="btn pri" data-a="postmemo">Đăng bài</button>
+      <button class="btn pri post-btn" data-a="postmemo"${S._uploading?' disabled':''}>${S._uploading?'Đang đăng…':'Đăng'}</button>
     </div></div>`
     :`<div class="card" style="text-align:center;padding:18px"><b>Chọn tên để đăng bài và bình luận</b><br><button class="btn pri" data-a="modal" data-v="iam" style="margin-top:10px">Chọn tên</button></div>`;
 
@@ -612,14 +668,18 @@ function vMemo(){
     const likes=(p.likes||[]);
     const liked=S.meId&&likes.includes(S.meId);
     const imgs=(p.imgs||[]).filter(Boolean);
+    const n=imgs.length;const gCls=n===1?'g1':n===2?'g2':n===3?'g3':n===4?'g4':n>=5?'g5':'';
+    const showImgs=n<=5?imgs:imgs.slice(0,5);
+    const imgGrid=n?`<div class="post-imgs ${gCls}">${showImgs.map((item,idx)=>{const isV=typeof item==='object'&&item.v;const u=typeof item==='string'?item:item.url;const extra=idx===4&&n>5?`<div class="more-overlay">+${n-5}</div>`:'';return `<div class="pi" data-a="openimg" data-pid="${p.id}" data-idx="${idx}">${isV?`<video preload="metadata" src="${esc(u)}" muted playsinline></video><div class="vplay"><span></span></div>`:`<img loading="lazy" src="${esc(u)}" alt="" onerror="this.parentNode.style.display='none'">`}${extra}</div>`}).join("")}</div>`:"";
+    const timeAgo=p.t?esc(fmtDT(p.t)):"";
     return `<div class="post-card">
-      <div class="post-head"><span class="post-av">${esc(initials(nm(p.who)))}</span><div class="post-meta"><div class="pname">${esc(nm(p.who))}</div><div class="ptime">${p.t?esc(fmtDT(p.t)):""}</div></div>
-      <span style="margin-left:auto">${(S.isAdmin||p.who===S.meId)?`<button class="btn sm ghost" data-a="delpost" data-v="${p.id}" title="Xóa bài">✕</button>`:""}</span></div>
-      <div class="post-body">${esc(p.text||"")}</div>
-      ${imgs.length?`<div class="post-imgs">${imgs.map(item=>{const isV=typeof item==='object'&&item.v;const u=typeof item==='string'?item:item.url;return isV?`<video controls playsinline preload="metadata" src="${esc(u)}" style="width:100%;border-radius:10px;max-height:400px;background:#000"></video>`:`<img loading="lazy" src="${esc(u)}" alt="Ảnh" onerror="this.style.display='none'">`}).join("")}</div>`:""}
+      <div class="post-head"><span class="post-av">${esc(initials(nm(p.who)))}</span><div class="post-meta"><div class="pname">${esc(nm(p.who))}</div><div class="ptime">${timeAgo}</div></div>
+      <span style="margin-left:auto">${(S.isAdmin||p.who===S.meId)?`<button class="btn sm ghost" data-a="delpost" data-v="${p.id}" title="Xóa bài" style="font-size:18px;color:var(--muted)">···</button>`:""}</span></div>
+      ${(p.text||"").trim()?`<div class="post-body">${esc(p.text)}</div>`:""}
+      ${imgGrid}
       <div class="post-actions">
-        <button data-a="likepost" data-v="${p.id}" class="${liked?"liked":""}">♥ ${likes.length||""} Thích</button>
-        <button data-a="togglecmt" data-v="${p.id}">💬 ${cmts.length||""} Bình luận</button>
+        <button data-a="likepost" data-v="${p.id}" class="${liked?"liked":""}"><svg class="act-ico" viewBox="0 0 24 24" fill="${liked?'currentColor':'none'}" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78L12 21.23l8.84-8.84a5.5 5.5 0 0 0 0-7.78z"/></svg>${likes.length?' '+likes.length:''} Thích</button>
+        <button data-a="togglecmt" data-v="${p.id}"><svg class="act-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>${cmts.length?' '+cmts.length:''} Bình luận</button>
       </div>
       ${S.showCmts&&S.showCmts[p.id]?`<div class="pcmt-list">${cmts.map(c=>`<div class="pcmt-item"><span class="pcmt-av">${esc(initials(nm(c.who)))}</span><div class="pcmt-bubble"><span class="cn">${esc(nm(c.who))}</span><div class="ct">${esc(c.text||"")}</div><div class="ctime">${c.t?esc(fmtDT(c.t)):""} ${(S.isAdmin||c.who===S.meId)?`<button style="color:var(--bad);font-size:11px;font-weight:700" data-a="delpcmt" data-v="${c.id}">Xóa</button>`:""}</div></div></div>`).join("")}
       ${S.meId?`<div class="post-cmt-row"><input id="pcmt_${p.id}" placeholder="Viết bình luận…" maxlength="500"><button class="btn pri sm" data-a="postpcmt" data-v="${p.id}">Gửi</button></div>`:""}</div>`:""}</div>`;
@@ -1070,7 +1130,7 @@ document.addEventListener("click",async e=>{
   case "delmedia":await del("media/"+v);break;
   case "memotab":S.memoTab=v;render();break;
   case "rmpostimg":{S._postImgs=(S._postImgs||[]);S._postImgs.splice(Number(v),1);render();break}
-  case "postmemo":{const txt=val("postTxt").trim();const rawImgs=(S._postImgs||[]).slice();if(!txt&&!rawImgs.length||!S.meId)return toast("Viết gì đó hoặc chọn ảnh trước nhé");let imgs=[];if(rawImgs.length){toast("Đang upload "+rawImgs.length+" file…");for(let i=0;i<rawImgs.length;i++){try{const item=rawImgs[i];const data=typeof item==='string'?item:item.data;const isVid=typeof item==='object'&&item.isVid;const fname=(typeof item==='object'&&item.name)||('img_'+Date.now()+'_'+i+'.jpg');const res=await run("uploadImg",data,fname);if(res&&res.url){if(isVid||res.vid){const fid=(res.url.match(/\/d\/([^/?]+)/)||[])[1];const vurl=fid?'https://drive.google.com/uc?id='+fid+'&export=download':res.url;imgs.push({url:vurl,v:1})}else imgs.push(res.url)}else{imgs.push(data)}}catch(e){console.error("Upload err",e);const item=rawImgs[i];imgs.push(typeof item==='string'?item:item.data)}}}const id="pt"+Date.now().toString(36)+uid8();if(await save("posts/"+id,{text:txt,imgs,who:S.meId,likes:[],t:new Date().toISOString()})){const i=document.getElementById("postTxt");if(i)i.value="";S._postImgs=[];toast("Đã đăng bài")}break}
+  case "postmemo":{if(S._uploading)return;const txt=val("postTxt").trim();const rawImgs=(S._postImgs||[]).slice();if(!txt&&!rawImgs.length||!S.meId)return toast("Viết gì đó hoặc chọn ảnh trước nhé");let imgs=[];if(rawImgs.length){S._uploading=true;S._uploadTotal=rawImgs.length;S._uploadCur=0;S._uploadPct=0;render();for(let i=0;i<rawImgs.length;i++){S._uploadCur=i+1;S._uploadPct=Math.round((i/rawImgs.length)*100);render();try{const item=rawImgs[i];const data=typeof item==='string'?item:item.data;const isVid=typeof item==='object'&&item.isVid;const fname=(typeof item==='object'&&item.name)||('img_'+Date.now()+'_'+i+'.jpg');const res=await run("uploadImg",data,fname);if(res&&res.url){if(isVid||res.vid){const fid=(res.url.match(/\/d\/([^/?]+)/)||[])[1];const vurl=fid?'https://drive.google.com/uc?id='+fid+'&export=download':res.url;imgs.push({url:vurl,v:1})}else imgs.push(res.url)}else{toast("File "+(i+1)+" bỏ qua")}}catch(e){console.error("Upload err",e);toast("File "+(i+1)+" lỗi, bỏ qua")}}S._uploadPct=100;render()}const id="pt"+Date.now().toString(36)+uid8();const ok=await save("posts/"+id,{text:txt,imgs,who:S.meId,likes:[],t:new Date().toISOString()});S._uploading=false;S._uploadPct=0;S._uploadCur=0;S._uploadTotal=0;if(ok){const i=document.getElementById("postTxt");if(i)i.value="";S._postImgs=[];toast("Đã đăng bài")}render();break}
   case "delpost":{if(!S.isAdmin&&(!S.meId||(S.posts[v]||{}).who!==S.meId))return;await del("posts/"+v);const rc=Object.entries(S.pcmts||{}).filter(([,c])=>c.pid===v);for(const[cid]of rc)await del("pcmts/"+cid);toast("Đã xóa bài");break}
   case "likepost":{if(!S.meId)return toast("Chọn tên trước");const p=S.posts[v];if(!p)return;const lk=(p.likes||[]).slice();const idx=lk.indexOf(S.meId);if(idx>=0)lk.splice(idx,1);else lk.push(S.meId);await save("posts/"+v,{likes:lk},true);break}
   case "togglecmt":{if(!S.showCmts)S.showCmts={};S.showCmts[v]=!S.showCmts[v];render();break}
@@ -1092,9 +1152,12 @@ document.addEventListener("change",async e=>{
   else if(a==="mm"){S.mediaMatch=el.value;render()}
   else if(a==="selresult"){S.resultMatch=el.value;render()}
   else if(a==="trollopt"&&S.meId){await save("prefs/"+S.meId,{troll:el.checked});toast(el.checked?"Bot được trêu nhẹ anh":"Bot sẽ không nhắc tên anh khi trêu")}
+  else if(a==="openmedia"){const fi=document.getElementById("postFiles");if(fi){fi.value="";fi.click()}return}
+  else if(a==="opencam"){const fi=document.getElementById("camCapture");if(fi){fi.value="";fi.click()}return}
+  else if(a==="openimg"){const pid=el.dataset.pid,idx=Number(el.dataset.idx||0);const p=S.posts[pid];if(!p)return;const imgs=(p.imgs||[]).filter(Boolean);openLightbox(imgs,idx);return}
   else if(a==="addpostimg"){
     const files=Array.from(el.files||[]);if(!files.length)return;
-    if((S._postImgs||[]).length+files.length>6){el.value="";toast("Tối đa 6 ảnh/video");return}
+    if((S._postImgs||[]).length+files.length>10){el.value="";toast("Tối đa 10 ảnh/video");return}
     toast("Đang xử lý "+files.length+" file…");
     for(const f of files){try{
       if(f.type.startsWith("video/")){
@@ -1116,6 +1179,26 @@ document.addEventListener("change",async e=>{
 });
 (function(){const f=e=>{const t=e.target,i=t&&t.id||"";if(i.indexOf("ps")!==0||i==="psm")return;const id=i.split("_")[1];if(!id)return;const o=document.getElementById("psout_"+id);if(!o)return;const g=k=>document.getElementById("ps"+k+"_"+id),n=k=>Math.max(0,Math.floor(+(g(k)&&g(k).value)||0)),ck=k=>!!(g(k)&&g(k).checked),c=C(),pos=(g("pos")&&g("pos").value)||"TĐ";const k=n("g");o.textContent=ck("pl")?c.pPlay+k*goalPt(c,pos)+(k>=3?c.pHat:0)+n("a")*c.pAssist+(ck("ot")?c.pOnTime:0)+(ck("cs")?c.pClean:0)+(ck("pp")?c.pPen:0)+n("y")*c.pYellow+n("r")*c.pRed+(ck("pay")?c.pPay:0)+(ck("sup")?c.pSup:0):0};document.addEventListener("input",f);document.addEventListener("change",f)})();
 document.addEventListener("keydown",e=>{if(e.key==="Enter"&&e.target.id==="chatIn")sendChat();if(e.key==="Enter"&&e.target.id==="cmt"){const b=document.querySelector('[data-a="cmt"]');b&&b.click()}});
+
+/* ---------- lightbox ---------- */
+function openLightbox(imgs,startIdx){
+  let idx=startIdx||0;
+  const lb=document.createElement('div');lb.className='lightbox';
+  function renderLB(){
+    const item=imgs[idx];const isV=typeof item==='object'&&item.v;const u=typeof item==='string'?item:item.url;
+    lb.innerHTML=`<button class="lb-close" data-lb="close">✕</button>
+      ${imgs.length>1&&idx>0?'<button class="lb-nav lb-prev" data-lb="prev">‹</button>':''}
+      ${imgs.length>1&&idx<imgs.length-1?'<button class="lb-nav lb-next" data-lb="next">›</button>':''}
+      ${isV?`<video controls autoplay playsinline src="${esc(u)}" style="max-width:95vw;max-height:85vh;border-radius:4px"></video>`:`<img class="lb-img" src="${esc(u)}" alt="">`}
+      ${imgs.length>1?`<div class="lb-counter">${idx+1} / ${imgs.length}</div>`:''}`;
+  }
+  renderLB();document.body.appendChild(lb);document.body.style.overflow='hidden';
+  lb.addEventListener('click',e=>{const a=e.target.dataset.lb||e.target.closest('[data-lb]')?.dataset.lb;if(a==='close'||e.target===lb){lb.remove();document.body.style.overflow=''}else if(a==='prev'&&idx>0){idx--;renderLB()}else if(a==='next'&&idx<imgs.length-1){idx++;renderLB()}});
+  const onKey=e=>{if(e.key==='Escape'){lb.remove();document.body.style.overflow='';document.removeEventListener('keydown',onKey)}else if(e.key==='ArrowLeft'&&idx>0){idx--;renderLB()}else if(e.key==='ArrowRight'&&idx<imgs.length-1){idx++;renderLB()}};
+  document.addEventListener('keydown',onKey);
+  let tx=0;lb.addEventListener('touchstart',e=>{tx=e.touches[0].clientX},{passive:true});
+  lb.addEventListener('touchend',e=>{const dx=e.changedTouches[0].clientX-tx;if(Math.abs(dx)>50){if(dx<0&&idx<imgs.length-1){idx++;renderLB()}else if(dx>0&&idx>0){idx--;renderLB()}}},{passive:true});
+}
 
 /* ---------- boot ---------- */
 async function boot(){
